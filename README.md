@@ -1,7 +1,7 @@
 # qtrpi
-Scripts for building and deploying Qt5 to RaspberryPi3
+Scripts for building and deploying Qt5 to RaspberryPi devices
 
-## Qt Setup:
+## Setup:
 First, it's a good idea to setup passwordless `ssh` with the device.
 <br>This will prevent numerous repeated password prompts when running the build process.
 <br>
@@ -38,12 +38,11 @@ Now you can simply run the build script:
 <br>
 
 If building QtBase fails try the following steps:
-1. Use `git clean -dfx` in the qtbase module folder
-2. Install any missing dependencies on the device
-3. Tweak the `./configure` variables used
-4. Retry the build
+1. Install any missing dependencies on the device
+2. Tweak the `./configure` variables used
+3. Retry the build with `./qtrpi.py build --rebuild`
 
-## Configuring QTCreator:
+## Configuring QtCreator:
 Source Reference: [wiki.qt.io/RasperryPi2EGLFS](https://wiki.qt.io/RaspberryPi2EGLFS)
 
 Once qtbase is successfully built, use the following steps to configure QtCreator to build and deploy automatically to the device.
