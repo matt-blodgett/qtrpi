@@ -19,7 +19,8 @@ command flags:
 
 build                     build scripts
     | --install           install qtbase, build tools and create sysroot
-
+    | --rebuild           rebuild qtbase and sync sysroot
+    
 config                    set configuration variables
     | --local-path        local build path for modules and sysroot
     | --target-path       target install path for built Qt libs
