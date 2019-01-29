@@ -20,11 +20,16 @@ function send_file() {
     local target_path="$2"
     local source_file_name=$(basename "$source_path")
     scp "$source_path" "$TARGET_HOST:~/$source_file_name"
-    ssh "$TARGET_HOST" "sudo cp ~/$source_file_name $target_path && rm ~/$source_file_name"
+    send_command "sudo cp ~/$source_file_name $target_path && rm ~/$source_file_name"
 }
 
 
 function send_command() {
+    ssh "$TARGET_HOST" "$1"
+}
+
+
+function send_script() {
     local script_path="$1"
     cat "$script_path" | ssh "$TARGET_HOST"
 }

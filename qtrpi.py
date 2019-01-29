@@ -36,7 +36,8 @@ reset                     reset and clean
 device                    device utils
  -sy| --sync-sysroot      sync sysroot directory
  -sf| --send-file         send file to device
- -sc| --send-command      send shell script to run on device
+ -ss| --send-script       send bash shell script to run on device
+ -sc| --send-command      send shell command to run on device
  -sa| --set-ssh-auth      set ssh key and add to known hosts
 
 git: <https://github.com/matt-blodgett/qtrpi.git>"""
@@ -89,6 +90,7 @@ def main():
     group = sub_parser.add_mutually_exclusive_group(required=True)
     group.add_argument('-sy', '--sync-sysroot', dest='sync_sysroot', action='store_true')
     group.add_argument('-sf', '--send-file', dest='send_file', type=str, nargs=2)
+    group.add_argument('-ss', '--send-script', dest='send_script', type=str)
     group.add_argument('-sc', '--send-command', dest='send_command', type=str)
     group.add_argument('-sa', '--set-ssh-auth', dest='set_ssh_auth', action='store_true')
 
@@ -165,6 +167,9 @@ def main():
         elif args.send_file:
             fr_file, to_file = args.send_file
             sh_functions += f'send_file "{fr_file}" "{to_file}"; '
+
+        elif args.send_script:
+            sh_functions += f'send_script "{args.send_script}; '
 
         elif args.send_command:
             sh_functions += f'send_command "{args.send_command}"; '

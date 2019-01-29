@@ -22,19 +22,19 @@ function init_local() {
 
 function init_device() {
     source $PWD/utils/device.sh
-    send_command "$PWD/utils/device/init-deps.sh"
+    send_script "$PWD/utils/device/init-deps.sh"
 
     local pi_usr=$(cut -d"@" -f1 <<<"$TARGET_HOST")
-    ssh "$TARGET_HOST" "sudo mkdir $TARGET_PATH && sudo chown $pi_usr:$pi_usr $TARGET_PATH --recursive"
+    send_command "sudo mkdir $TARGET_PATH && sudo chown $pi_usr:$pi_usr $TARGET_PATH --recursive"
 }
 
 
 function install_device() {
     source $PWD/utils/device.sh
-    send_command "$PWD/utils/device/fix-mesa-libs.sh"
+    send_script "$PWD/utils/device/fix-mesa-libs.sh"
 
     local conf_path="/etc/ld.so.conf.d/00-qt5pi.conf"
-    ssh "$TARGET_HOST" "echo $TARGET_PATH/lib | sudo tee $conf_path && sudo ldconfig"
+    send_command "echo $TARGET_PATH/lib | sudo tee $conf_path && sudo ldconfig"
 }
 
 
@@ -68,6 +68,7 @@ function build_qtbase() {
     git clone "git://code.qt.io/qt/$qt_module.git" "$LOCAL_PATH/modules/$qt_module" -b "$QT_BRANCH"
     cd  "$LOCAL_PATH/modules/$qt_module"
     git checkout "tags/$QT_TAG"
+
     local qmake_file="mkspecs/devices/$TARGET_DEVICE/qmake.conf"
 
     # Add missing INCLUDEPATH in qmake conf
@@ -83,17 +84,17 @@ EOL
     ./configure \
         -release \
         -opengl es2 \
-        -device "$TARGET_DEVICE" \
-        -device-option CROSS_COMPILE="$CROSS_COMPILE" \
-        -sysroot "$SYSROOT" \
+        -make libs \
         -opensource \
         -confirm-license \
-        -make libs \
+        -no-use-gold-linker \
+        -fontconfig \
+        -device-option CROSS_COMPILE="$CROSS_COMPILE" \
+        -device "$TARGET_DEVICE" \
+        -sysroot "$SYSROOT" \
         -prefix "$TARGET_PATH" \
         -extprefix "$output_dir" \
         -hostprefix "$output_host_dir" \
-        -no-use-gold-linker \
-        -fontconfig \
         |& tee "$LOCAL_PATH/logs/$qt_module.log"
 
     cmd_make "$qt_module"
