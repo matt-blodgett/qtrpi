@@ -13,7 +13,6 @@ qtrpi: scripts for building and deploying Qt to Raspberry Pi devices
 
 optional flags:
   -h| --help              display help text
-  -v| --verbose           display process output
 
 command flags:
 
@@ -63,7 +62,6 @@ def run_shell(args, bash=True):
 def main():
     common = argparse.ArgumentParser(add_help=False)
     common.add_argument('-h', '--help', dest='show_help', action='store_true')
-    common.add_argument('-v', '--verbose', dest='show_verbose', action='store_true')
 
     parser = argparse.ArgumentParser(add_help=False, parents=[common])
     subparsers = parser.add_subparsers(dest='command')

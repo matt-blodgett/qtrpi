@@ -25,7 +25,7 @@ function init_device() {
     send_command "$PWD/utils/device/init-deps.sh"
 
     local pi_usr=$(cut -d"@" -f1 <<<"$TARGET_HOST")
-    ssh "$TARGET_HOST" "sudo mkdir $TARGET_PATH && sudo chown $pi_usr:$pi_usr $TARGET_PATH"
+    ssh "$TARGET_HOST" "sudo mkdir $TARGET_PATH && sudo chown $pi_usr:$pi_usr $TARGET_PATH --recursive"
 }
 
 
