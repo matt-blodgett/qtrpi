@@ -2,21 +2,18 @@
 
 
 # -------------------------------------------------- GLOBALS
-declare -A COMMON_FLAGS
-declare -A COMMAND_BUILD_FLAGS
-declare -A COMMAND_CONFIG_FLAGS
-declare -A COMMAND_RESET_FLAGS
-declare -A COMMAND_DEVICE_FLAGS
+readonly COMMAND="$1"
+declare -n FLAG_MAP
 
-COMMON_FLAGS=(
+declare -A COMMON_FLAGS=(
     ["--help"]="-h"
     ["--verbose"]="-v"
 )
-COMMAND_BUILD_FLAGS=(
+declare -A COMMAND_BUILD_FLAGS=(
     ["install"]=""
     ["rebuild"]=""
 )
-COMMAND_CONFIG_FLAGS=(
+declare -A COMMAND_CONFIG_FLAGS=(
     ["local-path:"]=""
     ["target-path:"]=""
     ["target-host:"]=""
@@ -24,22 +21,18 @@ COMMAND_CONFIG_FLAGS=(
     ["qt-branch:"]=""
     ["qt-tag:"]=""
 )
-COMMAND_RESET_FLAGS=(
+declare -A COMMAND_RESET_FLAGS=(
     ["all"]="a"
     ["build"]="b"
     ["config"]="c"
 )
-COMMAND_DEVICE_FLAGS=(
+declare -A COMMAND_DEVICE_FLAGS=(
     ["sync-sysroot"]="y"
     ["send-file:"]="f:"
     ["send-script:"]="s:"
     ["send-command:"]="c:"
     ["set-ssh-auth"]="a"
 )
-
-
-declare -n FLAG_MAP
-readonly COMMAND="$1"
 
 
 # -------------------------------------------------- UTILS
@@ -87,19 +80,18 @@ function join_by {
 # -------------------------------------------------- USAGE
 function show_usage() {
     cat <<EOF
-usage: qtrpi.py [options]
-qtrpi: scripts for building and deploying Qt to Raspberry Pi devices
+Usage: qtrpi.py COMMAND [<options>]
+Scripts for building and deploying Qt to RaspberryPi devices
 
-optional flags:
+Optional Flags:
  -h| --help              display help text
 
-command flags:
-
-build                    build scripts
+Command Flags:
+build                    Build Scripts
    | --install           install qtbase, build tools and create sysroot
    | --rebuild           rebuild qtbase and sync sysroot
 
-config                   set configuration variables
+config                   Set Configuration Variables
    | --local-path        local build path for modules and sysroot
    | --target-path       target install path for built Qt libs
    | --target-host       device address <"host@address">
@@ -107,22 +99,24 @@ config                   set configuration variables
    | --qt-branch         Qt version branch
    | --qt-tag            Qt version tag
 
-reset                    reset and clean
+reset                    Reset And Clean
  -a| --all               reset both build and config
  -b| --build             reset qtrpi build process and clean
  -c| --config            reset all config variables to default
 
-device                   device utils
+device                   Device Utils
  -y| --sync-sysroot      sync sysroot directory
  -f| --send-file         send file to device
  -s| --send-script       send bash shell script to run on device
  -c| --send-command      send shell command to run on device
  -a| --set-ssh-auth      set ssh key and add to known hosts
 
-git: <https://github.com/matt-blodgett/qtrpi.git>
+Git: <https://github.com/matt-blodgett/qtrpi.git>
 EOF
 
-    exit $1
+    if [[ ! "$1" ]]
+    then exit 1
+    else exit $1; fi
 }
 
 
@@ -254,6 +248,7 @@ function validate_args() {
 
     check_unrecognized_flags args flags
     check_required_flags args flags
+
     if [[ "$mutex" == true ]]; then
         check_mutually_exclusive_flags args flags
     fi
@@ -426,8 +421,4 @@ function main() {
 }
 
 
-
 main "$@"
-
-
-
