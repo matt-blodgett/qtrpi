@@ -90,7 +90,7 @@ function set_ofmt() {
             --foreground    ) set_foreground "$2"; shift 2 ;;
             --background    ) set_background "$2"; shift 2 ;;
             --title         ) set_console_title "$2"; shift 2 ;;
-            *               ) break ;;
+            * ) break ;;
         esac
     done
 }
@@ -120,7 +120,7 @@ function clr_ofmt() {
             -t|--text       ) set_clear "text"; shift ;;
             -f|--foreground ) set_clear "foreground"; shift ;;
             -b|--background ) set_clear "background"; shift ;;
-            *               ) break ;;
+            * ) break ;;
         esac
     done
 }

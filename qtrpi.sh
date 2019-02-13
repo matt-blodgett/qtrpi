@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 
 
-source utils.sh
+source ./utils.sh
+source ./ofmt.sh
 
 
 # -------------------------------------------------- GLOBALS
@@ -87,7 +88,13 @@ EOF
 
 # -------------------------------------------------- ERRORS
 function show_error() {
-    if [[ "$1" ]]; then echo "$1"; fi
+    local err_msg="$1"
+    if [[ "$err_msg" ]]; then
+        set_ofmt -b --foreground "red"
+        echo "$err_msg"
+        clr_ofmt -a
+    fi
+
     echo "use 'qtrpi.sh --help' for show_usage"
     exit 1
 }
@@ -231,8 +238,8 @@ function cmd_run() {
 
 
 function cmd_build() {
-    source ${0%/*}/utils/build.sh
-    source ${0%/*}/utils/device.sh
+    source ./utils/build.sh
+    source ./utils/device.sh
 
     local cwd="$PWD"
 
@@ -258,7 +265,7 @@ function cmd_build() {
 
 
 function cmd_config() {
-    source ${0%/*}/utils/config.sh
+    source ./utils/config.sh
 
     case "$1" in
         --local-path    ) set_local_path "$2" ;;
@@ -272,9 +279,8 @@ function cmd_config() {
 
 
 function cmd_reset() {
-    source ${0%/*}/utils/config.sh
-    source ${0%/*}/utils/build.sh
-
+    source ./utils/config.sh
+    source ./utils/build.sh
 
     if [[ "$1" =~ ^(-a|--all)$ ]]; then
         reset_config
@@ -292,7 +298,7 @@ function cmd_reset() {
 
 
 function cmd_device() {
-    source ${0%/*}/utils/device.sh
+    source ./utils/device.sh
 
     case "$1" in
         -y|--sync-sysroot ) sync_sysroot ;;
@@ -308,7 +314,7 @@ function cmd_device() {
 function check_variables() {
     var_path=$PWD/utils/source/variables.sh
     if [[ ! -f "$var_path" ]]; then
-        source ${0%/*}/utils/config.sh
+        source ./utils/config.sh
         reset_config
     fi
 }
@@ -350,8 +356,8 @@ function main() {
             local resets=()
             while true; do
                 case "$1" in
-                    -a|--all ) resets=( "-b" "-c" ); break ;;
-                    -b|--build ) resets+=( "-b" ); shift ;;
+                    -a|--all    ) resets=( "-b" "-c" ); break ;;
+                    -b|--build  ) resets+=( "-b" ); shift ;;
                     -c|--config ) resets+=( "-c" ); shift ;;
                     -- ) shift ;;
                     *  ) break ;;
@@ -380,7 +386,7 @@ function main() {
 }
 
 
-#main "$@"
+main "$@"
 
 
 
@@ -392,29 +398,28 @@ function main() {
 # echo -e "\e[31mHello World\e[0m"
 
 
-source ./ofmt.sh
 
 
-set_ofmt -b
-
-echo "bold text"
-
-clr_ofmt
-
-echo "normal text"
-
-set_ofmt -b --foreground "magenta" --background "white"
-
-echo "magenta colour"
-
-clr_ofmt
-
-echo "default colour"
-
-set_ofmt --title "Temp Title"
-
-sleep 1
-
+#set_ofmt -b
+#
+#echo "bold text"
+#
+#clr_ofmt
+#
+#echo "normal text"
+#
+#set_ofmt -b --foreground "magenta" --background "white"
+#
+#echo "magenta colour"
+#
+#clr_ofmt
+#
+#echo "default colour"
+#
+#set_ofmt --title "Temp Title"
+#
+#sleep 1
+#
 
 
 
