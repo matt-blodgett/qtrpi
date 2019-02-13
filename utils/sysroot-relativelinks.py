@@ -1,38 +1,31 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
+
 import os
 import sys
 
 
-# Take a sysroot directory and turn all the abolute symlinks and turn them into
-# relative ones such that the sysroot is usable within another system.
-# https://raw.githubusercontent.com/riscv/riscv-poky/priv-1.10/scripts/sysroot-relativelinks.py
+def handle_link(file_path, sub_dir, top_dir):
+    link = os.readlink(file_path)
 
-
-if len(sys.argv) != 2:
-    print("Usage is " + sys.argv[0] + "<directory>")
-    sys.exit(1)
-
-
-topdir = sys.argv[1]
-topdir = os.path.abspath(topdir)
-
-
-def handlelink(filep, subdir):
-    link = os.readlink(filep)
-    if link[0] != "/":
+    if link[0] != '/' or link.startswith(top_dir):
         return
-    if link.startswith(topdir):
-        return
-    #print("Replacing %s with %s for %s" % (link, topdir+link, filep))
-    print("Replacing %s with %s for %s" % (link, os.path.relpath(topdir+link, subdir), filep))
-    os.unlink(filep)
-    os.symlink(os.path.relpath(topdir+link, subdir), filep)
+
+    rel_path = os.path.relpath(top_dir + link, sub_dir)
+    print(f'Replacing {link} with {rel_path} for {file_path}')
+
+    os.unlink(file_path)
+    os.symlink(rel_path, file_path)
 
 
-for subdir, dirs, files in os.walk(topdir):
-    for f in dirs + files:
-        filep = os.path.join(subdir, f)
-        if os.path.islink(filep):
-            #print("Considering %s" % filep)
-            handlelink(filep, subdir)
+if __name__ == '__main__':
+    if len(sys.argv) != 2:
+        print(f'Usage is {sys.argv[0]} <directory>')
+        sys.exit(1)
 
+    top_dir = sys.argv[1]
+    top_dir = os.path.abspath(top_dir)
+    for sub_dir, dirs, files in os.walk(top_dir):
+        for path in dirs + files:
+            file_path = os.path.join(sub_dir, path)
+            if os.path.islink(file_path):
+                handle_link(file_path, sub_dir, top_dir)
