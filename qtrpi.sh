@@ -334,20 +334,18 @@ function cmd_device() {
 }
 
 
-function check_config() {
+function check_variables() {
     var_path=$PWD/utils/source/variables.sh
     if [[ ! -f "$var_path" ]]; then
         source ${0%/*}/utils/config.sh
         reset_config
     fi
-
-    exit 0
 }
 
 
 # -------------------------------------------------- MAIN
 function main() {
-    check_config
+    check_variables
 
     local args="${@:1}"
     validate_args "$args"
