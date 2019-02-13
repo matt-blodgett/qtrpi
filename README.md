@@ -25,22 +25,22 @@ cd ./qtrpi
 Configure shared script variables and change applicable defaults:
 
 ```bash
-./qtrpi.py config --local-path "/opt/qtrpi"
-./qtrpi.py config --target-host "pi@192.168.0.15"
+./qtrpi.sh config --local-path "/opt/qtrpi"
+./qtrpi.sh config --target-host "pi@192.168.0.15"
 ```
 <br>
 
 Now you can simply run the build script:
 
 ```bash
-./qtrpi.py build --install
+./qtrpi.sh build --install
 ```
 <br>
 
 If building QtBase fails try the following steps:
 1. Install any missing dependencies on the device
 2. Tweak the `./configure` variables used
-3. Retry the build with `./qtrpi.py build --rebuild`
+3. Retry the build with `./qtrpi.sh build --rebuild`
 
 ## Configuring QtCreator:
 Source Reference: [wiki.qt.io/RasperryPi2EGLFS](https://wiki.qt.io/RaspberryPi2EGLFS)
