@@ -23,7 +23,6 @@ function init_local() {
 function init_device() {
     source $PWD/utils/device.sh
     send_script "$PWD/utils/device/init-deps.sh"
-
     local pi_usr=$(cut -d"@" -f1 <<<"$TARGET_HOST")
     send_command "sudo mkdir $TARGET_PATH && sudo chown $pi_usr:$pi_usr $TARGET_PATH --recursive"
 }
@@ -32,7 +31,6 @@ function init_device() {
 function install_device() {
     source $PWD/utils/device.sh
     send_script "$PWD/utils/device/fix-mesa-libs.sh"
-
     local conf_path="/etc/ld.so.conf.d/00-qt5pi.conf"
     send_command "echo $TARGET_PATH/lib | sudo tee $conf_path && sudo ldconfig"
 }

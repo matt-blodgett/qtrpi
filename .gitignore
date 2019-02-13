@@ -4,3 +4,6 @@ venv*
 
 # pycharm files
 .idea*
+
+# configuration files
+*variables.sh

@@ -87,38 +87,37 @@ function join_by {
 # -------------------------------------------------- USAGE
 function show_usage() {
     cat <<EOF
-show_usage: qtrpi.py [options]
-
+usage: qtrpi.py [options]
 qtrpi: scripts for building and deploying Qt to Raspberry Pi devices
 
 optional flags:
-  -h| --help              display help text
+ -h| --help              display help text
 
 command flags:
 
-build                     build scripts
-    | --install           install qtbase, build tools and create sysroot
-    | --rebuild           rebuild qtbase and sync sysroot
+build                    build scripts
+   | --install           install qtbase, build tools and create sysroot
+   | --rebuild           rebuild qtbase and sync sysroot
 
-config                    set configuration variables
-    | --local-path        local build path for modules and sysroot
-    | --target-path       target install path for built Qt libs
-    | --target-host       device address <"host@address">
-    | --target-device     target device flag for cross compiling
-    | --qt-branch         Qt version branch
-    | --qt-tag            Qt version tag
+config                   set configuration variables
+   | --local-path        local build path for modules and sysroot
+   | --target-path       target install path for built Qt libs
+   | --target-host       device address <"host@address">
+   | --target-device     target device flag for cross compiling
+   | --qt-branch         Qt version branch
+   | --qt-tag            Qt version tag
 
-reset                     reset and clean
-  -a| --all               reset both build and config
-  -b| --build             reset qtrpi build process and clean
-  -c| --config            reset all config variables to default
+reset                    reset and clean
+ -a| --all               reset both build and config
+ -b| --build             reset qtrpi build process and clean
+ -c| --config            reset all config variables to default
 
-device                    device utils
-  -y| --sync-sysroot      sync sysroot directory
-  -f| --send-file         send file to device
-  -s| --send-script       send bash shell script to run on device
-  -c| --send-command      send shell command to run on device
-  -a| --set-ssh-auth      set ssh key and add to known hosts
+device                   device utils
+ -y| --sync-sysroot      sync sysroot directory
+ -f| --send-file         send file to device
+ -s| --send-script       send bash shell script to run on device
+ -c| --send-command      send shell command to run on device
+ -a| --set-ssh-auth      set ssh key and add to known hosts
 
 git: <https://github.com/matt-blodgett/qtrpi.git>
 EOF
@@ -335,8 +334,21 @@ function cmd_device() {
 }
 
 
+function check_config() {
+    var_path=$PWD/utils/source/variables.sh
+    if [[ ! -f "$var_path" ]]; then
+        source ${0%/*}/utils/config.sh
+        reset_config
+    fi
+
+    exit 0
+}
+
+
 # -------------------------------------------------- MAIN
 function main() {
+    check_config
+
     local args="${@:1}"
     validate_args "$args"
 
@@ -416,4 +428,8 @@ function main() {
 }
 
 
+
 main "$@"
+
+
+
