@@ -307,15 +307,15 @@ function cmd_reset() {
     source ${0%/*}/utils/build.sh
 
     if [[ "$1" =~ ^(-a|--all)$ ]]; then
-        config_reset
-        build_reset
+        reset_config
+        reset_build
         exit 0
     fi
 
     for arg in $@; do
         case "$arg" in
-            -b|--build  ) build_reset ;;
-            -c|--config ) config_reset ;;
+            -b|--build  ) reset_build ;;
+            -c|--config ) reset_config ;;
         esac
     done
 }

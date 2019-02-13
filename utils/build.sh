@@ -112,5 +112,5 @@ function build_qtmodule() {
 
 
 function reset_build() {
-    echo "resetting build"
+    sudo rm -rfv "$LOCAL_PATH"
 }
