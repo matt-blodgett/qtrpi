@@ -4,6 +4,12 @@
 source $PWD/utils/source/variables.sh
 
 
+function set_ssh_auth() {
+    yes "" | ssh-keygen -t rsa
+    ssh-copy-id -i ~/.ssh/id_rsa.pub "$TARGET_HOST"
+}
+
+
 function sync_sysroot() {
     rsync -avz "$TARGET_HOST:/lib" "$LOCAL_PATH/raspi/sysroot"
     rsync -avz "$TARGET_HOST:/usr/include" "$LOCAL_PATH/raspi/sysroot/usr"
@@ -15,17 +21,9 @@ function sync_sysroot() {
 }
 
 
-function send_file() {
-    local source_path="$1"
-    local target_path="$2"
-    local source_file_name=$(basename "$source_path")
-    scp "$source_path" "$TARGET_HOST:~/$source_file_name"
-    send_command "sudo cp ~/$source_file_name $target_path && rm ~/$source_file_name"
-}
-
-
 function send_command() {
-    ssh "$TARGET_HOST" "$1"
+    local command="$1"
+    ssh "$TARGET_HOST" "$command"
 }
 
 
@@ -35,7 +33,10 @@ function send_script() {
 }
 
 
-function set_ssh_auth() {
-    yes "" | ssh-keygen -t rsa
-    ssh-copy-id -i ~/.ssh/id_rsa.pub "$TARGET_HOST"
+function send_file() {
+    local source_path="$1"
+    local target_path="$2"
+    local source_file_name=$(basename "$source_path")
+    scp "$source_path" "$TARGET_HOST:~/$source_file_name"
+    send_command "sudo cp ~/$source_file_name $target_path && rm ~/$source_file_name"
 }

@@ -34,11 +34,11 @@ declare -A COMMAND_RESET_FLAGS=(
     ["config"]="c"
 )
 declare -A COMMAND_DEVICE_FLAGS=(
+    ["set-ssh-auth"]="a"
     ["sync-sysroot"]="y"
-    ["send-file:"]="f:"
     ["send-script:"]="s:"
     ["send-command:"]="c:"
-    ["set-ssh-auth"]="a"
+    ["send-file:"]="f:"
 )
 
 
@@ -70,11 +70,11 @@ reset                    Reset And Clean
  -c| --config            reset all config variables to default
 
 device                   Device Utils
+ -a| --set-ssh-auth      set ssh key and add to known hosts
  -y| --sync-sysroot      sync sysroot directory
- -f| --send-file         send file to device
  -s| --send-script       send bash shell script to run on device
  -c| --send-command      send shell command to run on device
- -a| --set-ssh-auth      set ssh key and add to known hosts
+ -f| --send-file         send file to device
 
 Git: <https://github.com/matt-blodgett/qtrpi.git>
 EOF
@@ -362,15 +362,15 @@ function main() {
         ;;
         device )
             case "$1" in
+                -a|--set-ssh-auth ) cmd_run cmd_device "$1" ;;
                 -y|--sync-sysroot ) cmd_run cmd_device "$1" ;;
+                -s|--send-script  ) cmd_run cmd_device "$1" "$2" ;;
+                -c|--send-command ) cmd_run cmd_device "$1" "$2" ;;
                 -f|--send-file    )
                     local arg1=$(index_offset "$1" 1 args)
                     local arg2=$(index_offset "$1" 2 args)
                     cmd_run cmd_device "$1" "$arg1" "$arg2"
                 ;;
-                -s|--send-script  ) cmd_run cmd_device "$1" "$2" ;;
-                -c|--send-command ) cmd_run cmd_device "$1" "$2" ;;
-                -a|--set-ssh-auth ) cmd_run cmd_device "$1" ;;
             esac
         ;;
         * )
