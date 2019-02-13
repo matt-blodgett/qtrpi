@@ -96,7 +96,6 @@ function set_ofmt() {
 }
 
 
-
 function clr_ofmt() {
     if [[ "$#" == 0 ]]; then
         set_clear "all"
@@ -125,14 +124,3 @@ function clr_ofmt() {
         esac
     done
 }
-
-
-#
-#function test() {
-#
-#    # Terminals allow attribute combinations. The attributes must be separated by a semicolon (“;”).
-#    echo -e "\e[1;4mBold and Underlined"
-#    echo -e "\e[1;31;42m Yes it is awful \e[0m"
-#
-#
-#}
