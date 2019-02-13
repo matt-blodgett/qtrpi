@@ -1,12 +1,19 @@
 #!/usr/bin/env bash
 
 
+source utils.sh
+
+
 # -------------------------------------------------- GLOBALS
+OPT_QUIET=false
+OPT_VERBOSE=false
+
 readonly COMMAND="$1"
 declare -n FLAG_MAP
 
 declare -A COMMON_FLAGS=(
     ["--help"]="-h"
+    ["--quiet"]="-q"
     ["--verbose"]="-v"
 )
 declare -A COMMAND_BUILD_FLAGS=(
@@ -33,48 +40,6 @@ declare -A COMMAND_DEVICE_FLAGS=(
     ["send-command:"]="c:"
     ["set-ssh-auth"]="a"
 )
-
-
-# -------------------------------------------------- UTILS
-function in_array() {
-    local value="$1"
-    local -n _arr=$2
-
-    for val in "${_arr[@]}"; do
-        if [[ "$val" == "$value" ]]; then
-            echo 1
-        fi
-    done
-}
-
-
-function index_of() {
-    local value="$1"
-    local -n _arr=$2
-
-    local i=0
-    for val in "${_arr[@]}"; do
-        if [[ "$val" == "$value" ]]; then
-            echo "$i"
-            break
-        fi
-        ((i++))
-    done
-}
-
-
-function index_offset() {
-    local flag="$1"
-    local offset="$2"
-    local -n __arr=$3
-    local index=$(index_of "$flag" __arr)
-    echo "${__arr[ (( index + offset )) ]}"
-}
-
-
-function join_by {
-    local IFS="$1"; shift; echo "$*";
-}
 
 
 # -------------------------------------------------- USAGE
@@ -170,7 +135,7 @@ function check_required_flags() {
         fi
     done
 
-    if [[ (("$found" == 0)) ]]; then
+    if [[ (( "$found" == 0 )) ]]; then
         show_error "missing required flags"
     fi
 }
@@ -256,6 +221,15 @@ function validate_args() {
 
 
 # -------------------------------------------------- COMMANDS
+function cmd_run() {
+    if [[ "$OPT_QUIET" == true ]]; then
+        $1 "${@:2}" &>/dev/null
+    else
+        $1 "${@:2}"
+    fi
+}
+
+
 function cmd_build() {
     source ${0%/*}/utils/build.sh
     source ${0%/*}/utils/device.sh
@@ -301,6 +275,7 @@ function cmd_reset() {
     source ${0%/*}/utils/config.sh
     source ${0%/*}/utils/build.sh
 
+
     if [[ "$1" =~ ^(-a|--all)$ ]]; then
         reset_config
         reset_build
@@ -329,6 +304,7 @@ function cmd_device() {
 }
 
 
+# -------------------------------------------------- ENVIRONMENT
 function check_variables() {
     var_path=$PWD/utils/source/variables.sh
     if [[ ! -f "$var_path" ]]; then
@@ -340,7 +316,7 @@ function check_variables() {
 
 # -------------------------------------------------- MAIN
 function main() {
-    check_variables
+    cmd_run check_variables
 
     local args="${@:1}"
     validate_args "$args"
@@ -361,12 +337,12 @@ function main() {
 
     case "$COMMAND" in
         build )
-            cmd_build "$1"
+            cmd_run cmd_build "$1"
         ;;
         config )
             while true; do
                 if [[ "$1" == "--" ]]; then break; fi
-                cmd_config "$1" "$2"
+                cmd_run cmd_config "$1" "$2"
                 shift 2
             done
         ;;
@@ -374,44 +350,27 @@ function main() {
             local resets=()
             while true; do
                 case "$1" in
-                    -a|--all )
-                        cmd_reset "-a"
-                        break
-                    ;;
-                    -b|--build )
-                        resets+=( "-b" )
-                        shift
-                    ;;
-                    -c|--config )
-                        resets+=( "-c" )
-                        shift
-                    ;;
+                    -a|--all ) resets=( "-b" "-c" ); break ;;
+                    -b|--build ) resets+=( "-b" ); shift ;;
+                    -c|--config ) resets+=( "-c" ); shift ;;
                     -- ) shift ;;
                     *  ) break ;;
                 esac
             done
 
-            cmd_reset "${resets[@]}"
+            cmd_run cmd_reset "${resets[@]}"
         ;;
         device )
             case "$1" in
-                -y|--sync-sysroot )
-                    cmd_device "$1"
-                ;;
-                -f|--send-file )
+                -y|--sync-sysroot ) cmd_run cmd_device "$1" ;;
+                -f|--send-file    )
                     local arg1=$(index_offset "$1" 1 args)
                     local arg2=$(index_offset "$1" 2 args)
-                    cmd_device "$1" "$arg1" "$arg2"
+                    cmd_run cmd_device "$1" "$arg1" "$arg2"
                 ;;
-                -s|--send-script )
-                    cmd_device "$1" "$2"
-                ;;
-                -c|--send-command )
-                    cmd_device "$1" "$2"
-                ;;
-                -a|--set-ssh-auth )
-                    cmd_device "$1"
-                ;;
+                -s|--send-script  ) cmd_run cmd_device "$1" "$2" ;;
+                -c|--send-command ) cmd_run cmd_device "$1" "$2" ;;
+                -a|--set-ssh-auth ) cmd_run cmd_device "$1" ;;
             esac
         ;;
         * )
@@ -421,4 +380,56 @@ function main() {
 }
 
 
-main "$@"
+#main "$@"
+
+
+
+# mytitle="Some title"
+
+
+
+
+# echo -e "\e[31mHello World\e[0m"
+
+
+source ./ofmt.sh
+
+
+set_ofmt -b
+
+echo "bold text"
+
+clr_ofmt
+
+echo "normal text"
+
+set_ofmt -b --foreground "magenta" --background "white"
+
+echo "magenta colour"
+
+clr_ofmt
+
+echo "default colour"
+
+set_ofmt --title "Temp Title"
+
+sleep 1
+
+
+
+
+#echo -ne '#####                   (33%)\r'
+#sleep 1
+#echo -ne '#############           (66%)\r'
+#sleep 1
+#echo -ne '####################### (100%)\r'
+#echo -ne '\n'
+
+
+
+
+
+
+
+
+
