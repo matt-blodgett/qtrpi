@@ -266,52 +266,39 @@ function cmd_build() {
     source ${0%/*}/utils/build.sh
     source ${0%/*}/utils/device.sh
 
+    local cwd="$PWD"
+
     case "$1" in
         --install )
-            echo "cmd_build - install"
+            init_local
+            init_device
+            sync_sysroot
+            build_qtbase
+            cd "$cwd"
+            install_device
+            sync_sysroot
         ;;
         --rebuild )
-            echo "cmd_build - rebuild"
+            sync_sysroot
+            clean_module "qtbase"
+            build_qtbase
+            cd "$cwd"
+            sync_sysroot
         ;;
-
     esac
-
-
-#    if [[ $(in_args "--install") ]]; then
-#        init_local
-#        init_device
-#        sync_sysroot
-#        build_qtbase
-#        install_device
-#        sync_sysroot
-#    fi
 }
 
 
 function cmd_config() {
     source ${0%/*}/utils/config.sh
 
-    echo "$1 - $2"
-
     case "$1" in
-        --local-path)
-#                set_local_path $(get_positional_arguments "$arg" 1)
-        ;;
-        --target-path)
-#            set_target_path $(get_positional_arguments "$arg" 1)
-        ;;
-        --target-host)
-#            set_target_host $(get_positional_arguments "$arg" 1)
-        ;;
-        --target-device)
-#            set_target_device $(get_positional_arguments "$arg" 1)
-        ;;
-        --qt-branch)
-#            set_qt_branch $(get_positional_arguments "$arg" 1)
-        ;;
-        --qt-tag)
-#            set_qt_tag $(get_positional_arguments "$arg" 1)
-        ;;
+        --local-path    ) set_local_path "$2" ;;
+        --target-path   ) set_target_path "$2" ;;
+        --target-host   ) set_target_host "$2" ;;
+        --target-device ) set_target_device "$2" ;;
+        --qt-branch     ) set_qt_branch "$2" ;;
+        --qt-tag        ) set_qt_tag "$2" ;;
     esac
 }
 
@@ -320,48 +307,31 @@ function cmd_reset() {
     source ${0%/*}/utils/config.sh
     source ${0%/*}/utils/build.sh
 
-    echo "$@"
+    if [[ "$1" =~ ^(-a|--all)$ ]]; then
+        config_reset
+        build_reset
+        exit 0
+    fi
 
-#    if [[ $(in_args "-a") && $(in_args "--all") ]];  then
-#        config_reset
-#        build_reset
-#        exit 0
-#    fi
-#
-#    for arg in $@; do
-#        case "$arg" in
-#            -b | --build )
-#                build_reset
-#            ;;
-#            -c | --config )
-#                config_reset
-#            ;;
-#        esac
-#    done
+    for arg in $@; do
+        case "$arg" in
+            -b|--build  ) build_reset ;;
+            -c|--config ) config_reset ;;
+        esac
+    done
 }
 
 
 function cmd_device() {
     source ${0%/*}/utils/device.sh
 
-    echo "$@"
-
-#    for arg in $@; do
-#        case "$arg" in
-#            -sy | --sync-sysroot)
-#                sync_sysroot
-#            ;;
-#            -sf | --send-file)
-#                send_file $(get_positional_arguments "$arg" 2)
-#            ;;
-#            -sc | --send-command)
-#                send_command $(get_positional_arguments "$arg" 1)
-#            ;;
-#            -sa | --set-ssh-auth)
-#                set_ssh_auth
-#            ;;
-#        esac
-#    done
+    case "$1" in
+        -y|--sync-sysroot ) sync_sysroot ;;
+        -f|--send-file    ) send_file "$2" "$3" ;;
+        -s|--send-script  ) send_script "$2" ;;
+        -c|--send-command ) send_command "$2" ;;
+        -a|--set-ssh-auth ) set_ssh_auth ;;
+    esac
 }
 
 
