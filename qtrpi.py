@@ -31,7 +31,7 @@ config                    set configuration variables
 reset                     reset and clean
   -a| --all               reset both build and config
   -b| --build             reset qtrpi build process and clean
-  -c| --config            reset all config variables to default
+  -c| --config            reset all config variables to default 
 
 device                    device utils
  -sy| --sync-sysroot      sync sysroot directory
