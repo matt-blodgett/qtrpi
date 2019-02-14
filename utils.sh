@@ -3,9 +3,9 @@
 
 function in_array() {
     local value="$1"
-    local -n _arr=$2
+    local -n array=$2
 
-    for val in "${_arr[@]}"; do
+    for val in "${array[@]}"; do
         if [[ "$val" == "$value" ]]; then
             echo 1
         fi
@@ -15,10 +15,10 @@ function in_array() {
 
 function index_of() {
     local value="$1"
-    local -n _arr=$2
+    local -n array=$2
 
     local i=0
-    for val in "${_arr[@]}"; do
+    for val in "${array[@]}"; do
         if [[ "$val" == "$value" ]]; then
             echo "$i"
             break
@@ -31,12 +31,12 @@ function index_of() {
 function index_offset() {
     local flag="$1"
     local offset="$2"
-    local -n __arr=$3
-    local index=$(index_of "$flag" __arr)
-    echo "${__arr[ (( index + offset )) ]}"
+    local -n array=$3
+    local index=$(index_of "$flag" array)
+    echo "${array[((index+offset))]}"
 }
 
 
-function join_by {
+function join_array {
     local IFS="$1"; shift; echo "$*";
 }

@@ -8,14 +8,16 @@ source ./ofmt.sh
 # -------------------------------------------------- GLOBALS
 OPT_QUIET=false
 OPT_VERBOSE=false
+OPT_OUTPUT="all"
+OPT_COMMAND=""
 
-readonly COMMAND="$1"
 declare -n FLAG_MAP
 
 declare -A COMMON_FLAGS=(
     ["help"]="h"
     ["quiet"]="q"
     ["verbose"]="v"
+    ["output:"]=""
 )
 declare -A COMMAND_BUILD_FLAGS=(
     ["install"]=""
@@ -47,11 +49,14 @@ declare -A COMMAND_DEVICE_FLAGS=(
 # -------------------------------------------------- USAGE
 function show_usage() {
     cat <<EOF
-Usage: qtrpi.py COMMAND [<options>]
+Usage: qtrpi.py [-h|-q|-v] [--output level] COMMAND [<options>]
 Scripts for building and deploying Qt to RaspberryPi devices
 
 Optional Flags:
- -h| --help              display help text
+ -h| --help              display this help text
+ -q| --quiet             suppress all output
+ -v| --verbose           output verbose messages
+   | --output            set the output style [status,normal,silent,all]
 
 Command Flags:
 build                    Build Scripts
@@ -108,8 +113,11 @@ function should_error() {
 
 
 function invalid_command() {
-    if [[ "$COMMAND" != "" ]]; then show_error "invalid command '$COMMAND'";
-    else show_error "missing required positional argument 'command'"; fi
+    if [[ "$OPT_COMMAND" != "" ]]; then
+        show_error "invalid command '$OPT_COMMAND'";
+    else
+        show_error "missing required positional argument 'command'"
+    fi
 }
 
 
@@ -134,17 +142,17 @@ function check_required_flags() {
     local -n _args=$1
     local -n _flags=$2
 
-    local found=0
-    for arg in "${_args[@]}"; do
+    local found=false
+    for arg in ${_args[@]}; do
         if [[ "$arg" == -* ]]; then
             if [[ $(in_array "$arg" _flags) ]]; then
-                found=1
+                found=true
                 break
             fi
         fi
     done
 
-    if [[ (( "$found" == 0 )) ]]; then
+    if [[ "$found" == false ]]; then
         show_error "missing required flags"
     fi
 }
@@ -155,7 +163,7 @@ function check_mutually_exclusive_flags() {
     local -n _flags=$2
 
     local found=""
-    for arg in "${_args[@]}"; do
+    for arg in ${_args[@]}; do
         if [[ "$arg" == -* ]]; then
             if [[ $(in_array "$arg" _flags) ]]; then
                 if [[ "$found" != "" ]]; then
@@ -172,7 +180,7 @@ function check_unrecognized_flags() {
     local -n _args=$1
     local -n _flags=$2
 
-    for arg in "${_args[@]}"; do
+    for arg in ${_args[@]}; do
         if [[ "$arg" == -* ]]; then
             if [[ ! $(in_array "$arg" _flags) ]]; then
                 invalid_flag "$arg"
@@ -183,26 +191,46 @@ function check_unrecognized_flags() {
 
 
 # -------------------------------------------------- VALIDATION
-function validate_args() {
-    local -a args=()
-    for arg in $@; do
-        if [[ "$arg" =~ ^(-h|--help)$ ]]; then
-            show_usage 0
-        fi
+function parse_short_flags() {
+    local -n args=$1
 
+    local -a args_parsed=()
+    for arg in ${args[@]}; do
         if [[ "$arg" == -* && "$arg" != --* && "${#arg}" > 2 ]]; then
             for c in $(echo "${arg:1}" | sed -e 's/\(.\)/\1\n/g'); do
                 if [[ ! $(in_array "-$c" _flags_short) ]]; then
-                    args+=( "-$c" )
+                    args_parsed+=( "-$c" )
                 fi
             done
         else
-            args+=( "$arg" )
+            args_parsed+=( "$arg" )
         fi
     done
 
+    echo ${args_parsed[@]}
+}
+
+
+function validate_common_args() {
+    local -n args=$1
+
+    for key in "${!COMMON_FLAGS[@]}"; do
+        value="${COMMON_FLAGS[$key]}"
+        if [[ "$value" ]]; then
+            check_duplicate_flags args "$key" "$value"
+        fi
+    done
+
+    local -a flags_mutex=( "-q" "--quiet" "-v" "--verbose" )
+    check_mutually_exclusive_flags args flags_mutex
+}
+
+
+function validate_command_args() {
+    local -n args=$1
+
     local mutex=true
-    case "$COMMAND" in
+    case "$OPT_COMMAND" in
         build  ) FLAG_MAP=COMMAND_BUILD_FLAGS ;;
         config ) FLAG_MAP=COMMAND_CONFIG_FLAGS; mutex=false ;;
         reset  ) FLAG_MAP=COMMAND_RESET_FLAGS; mutex=false ;;
@@ -225,6 +253,24 @@ function validate_args() {
 
     if [[ "$mutex" == true ]]; then
         check_mutually_exclusive_flags args flags
+    fi
+}
+
+
+function validate_output_type() {
+    local -a output_types=( "status" "normal" "silent" "all" )
+
+    local valid_type=false
+    for output_type in ${output_types[@]}; do
+        if [[ "$OPT_OUTPUT" == "$output_type" ]]; then
+            valid_type=true
+            break
+        fi
+    done
+
+    if [[ "$valid_type" == false ]]; then
+        local valid_choices="valid choices are [$(join_array "," ${output_types[@]})]"
+        show_error "invalid output type '$OPT_OUTPUT' -- $valid_choices"
     fi
 }
 
@@ -321,28 +367,52 @@ function check_variables() {
 }
 
 
+# -------------------------------------------------- MISC
+function update_title() {
+    set_ofmt --title "qtrpi | $OPT_COMMAND | $1"
+}
+
+
 # -------------------------------------------------- MAIN
 function main() {
     cmd_run check_variables
 
-    local args="${@:1}"
-    validate_args "$args"
+    local -a args_array=( $@ )
+    local -a args_parsed=$(parse_short_flags args_array)
+    args_array=( ${args_parsed[@]} )
+    args_parsed=()
 
-    args_array=()
-    for arg in $args; do
-        args_array+=( "$arg" )
+    validate_common_args args_array
+    while [[ $i -lt ${#args_array[@]} ]]; do
+        local arg="${args_array[$i]}"
+
+        case "$arg" in
+            -h|--help    ) show_usage 0 ;;
+            -q|--quiet   ) OPT_QUIET=true ;;
+            -v|--verbose ) OPT_VERBOSE=true ;;
+            --output     ) OPT_OUTPUT="${args_array[((++i))]}" ;;
+            *            ) args_parsed+=( "$arg" ) ;;
+        esac
+
+        ((i++))
     done
 
-    local -n args=args_array
-    local flags_short="$(join_by "" "${FLAG_MAP[@]}")"
-    local flags_long="$(join_by "," "${!FLAG_MAP[@]}")"
-    local flags_getopt=$(getopt -o "$flags_short" --longoptions "$flags_long" -- "$@")
+    args_array=( ${args_parsed[@]} )
+    args_parsed=()
+
+    OPT_COMMAND="${args_array[0]}"
+    validate_command_args args_array
+    validate_output_type
+
+    local flags_short="$(join_array "" "${FLAG_MAP[@]}")"
+    local flags_long="$(join_array "," "${!FLAG_MAP[@]}")"
+    local flags_getopt=$(getopt -o "$flags_short" --longoptions "$flags_long" -- "${args_array[@]}")
     should_error $?
 
     eval set -- "$flags_getopt"
     should_error $?
 
-    case "$COMMAND" in
+    case "$OPT_COMMAND" in
         build )
             cmd_run cmd_build "$1"
         ;;
@@ -357,7 +427,7 @@ function main() {
             local resets=()
             while true; do
                 case "$1" in
-                    -a|--all    ) resets=( "-b" "-c" ); break ;;
+                    -a|--all    ) resets=( "-a" ); break ;;
                     -b|--build  ) resets+=( "-b" ); shift ;;
                     -c|--config ) resets+=( "-c" ); shift ;;
                     -d|--device ) resets+=( "-d" ); shift ;;
@@ -366,7 +436,7 @@ function main() {
                 esac
             done
 
-            cmd_run cmd_reset "${resets[@]}"
+            cmd_run cmd_reset ${resets[@]}
         ;;
         device )
             case "$1" in
@@ -375,8 +445,8 @@ function main() {
                 -s|--send-script  ) cmd_run cmd_device "$1" "$2" ;;
                 -c|--send-command ) cmd_run cmd_device "$1" "$2" ;;
                 -f|--send-file    )
-                    local arg1=$(index_offset "$1" 1 args)
-                    local arg2=$(index_offset "$1" 2 args)
+                    local arg1=$(index_offset "$1" 1 args_array)
+                    local arg2=$(index_offset "$1" 2 args_array)
                     cmd_run cmd_device "$1" "$arg1" "$arg2"
                 ;;
             esac
@@ -389,54 +459,3 @@ function main() {
 
 
 main "$@"
-
-
-
-# mytitle="Some title"
-
-
-
-
-# echo -e "\e[31mHello World\e[0m"
-
-
-
-
-#set_ofmt -b
-#
-#echo "bold text"
-#
-#clr_ofmt
-#
-#echo "normal text"
-#
-#set_ofmt -b --foreground "magenta" --background "white"
-#
-#echo "magenta colour"
-#
-#clr_ofmt
-#
-#echo "default colour"
-#
-#set_ofmt --title "Temp Title"
-#
-#sleep 1
-#
-
-
-
-#echo -ne '#####                   (33%)\r'
-#sleep 1
-#echo -ne '#############           (66%)\r'
-#sleep 1
-#echo -ne '####################### (100%)\r'
-#echo -ne '\n'
-
-
-
-
-
-
-
-
-

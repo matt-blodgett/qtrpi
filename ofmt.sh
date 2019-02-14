@@ -75,8 +75,8 @@ function set_ofmt() {
         ["title:"]=""
     )
 
-    local flags_short="$(join_by "" "${flag_map[@]}")"
-    local flags_long="$(join_by "," "${!flag_map[@]}")"
+    local flags_short="$(join_array "" "${flag_map[@]}")"
+    local flags_long="$(join_array "," "${!flag_map[@]}")"
     local flags_getopt=$(getopt -o "$flags_short" --longoptions "$flags_long" -- "$@")
 
     eval set -- "$flags_getopt"
@@ -109,8 +109,8 @@ function clr_ofmt() {
         ["background"]="b"
     )
 
-    local flags_short="$(join_by "" "${flag_map[@]}")"
-    local flags_long="$(join_by "," "${!flag_map[@]}")"
+    local flags_short="$(join_array "" "${flag_map[@]}")"
+    local flags_long="$(join_array "," "${!flag_map[@]}")"
     local flags_getopt=$(getopt -o "$flags_short" --longoptions "$flags_long" -- "$@")
 
     eval set -- "$flags_getopt"
