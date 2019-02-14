@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
-readonly USR_LIB_ARM="/usr/lib/arm-linux-gnueabihf"
 readonly OPT_VC_LIB="/opt/vc/lib"
+readonly USR_LIB_ARM="/usr/lib/arm-linux-gnueabihf"
 
 sudo mv "$USR_LIB_ARM/libEGL.so.1.0.0" "$USR_LIB_ARM/libEGL.so.1.0.0_backup"
 sudo mv "$USR_LIB_ARM/libGLESv2.so.2.0.0" "$USR_LIB_ARM/libGLESv2.so.2.0.0_backup"

@@ -5,7 +5,7 @@ SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 
 
 function set_variable_line() {
-    sed -i "$1s|.*|$2|" "$SCRIPT_DIR"/source/variables.sh
+    sed -i "$1s|.*|$2|" "$SCRIPT_DIR"/common/variables.sh
 }
 
 

@@ -2,7 +2,7 @@
 
 
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
-source "$SCRIPT_DIR"/source/variables.sh
+source "$SCRIPT_DIR"/common/variables.sh
 
 
 function set_ssh_auth() {

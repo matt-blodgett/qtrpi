@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 
 
-source ./utils.sh
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+source "$SCRIPT_DIR"/utils.sh
 
 
 declare -A MARKUP_MAP=(

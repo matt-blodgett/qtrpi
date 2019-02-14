@@ -2,7 +2,7 @@
 
 
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
-source "$SCRIPT_DIR"/source/variables.sh
+source "$SCRIPT_DIR"/common/variables.sh
 
 
 function reset_build() {
@@ -17,7 +17,7 @@ function reset_device() {
 
 
 function reset_config() {
-    cat > "$SCRIPT_DIR"/source/variables.sh <<EOF
+    cat > "$SCRIPT_DIR"/common/variables.sh <<EOF
 #!/usr/bin/env bash
 
 LOCAL_PATH="/opt/qtrpi"
@@ -28,7 +28,7 @@ QT_BRANCH="5.10"
 QT_TAG="v5.10.1"
 EOF
 
-    source "$SCRIPT_DIR"/source/variables.sh
+    source "$SCRIPT_DIR"/common/variables.sh
 }
 
 

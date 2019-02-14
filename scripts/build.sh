@@ -2,7 +2,7 @@
 
 
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
-source "$SCRIPT_DIR"/source/variables.sh
+source "$SCRIPT_DIR"/common/variables.sh
 
 
 function init_local() {
@@ -23,7 +23,7 @@ function init_local() {
 
 function init_device() {
     source "$SCRIPT_DIR"/device.sh
-    send_script "$SCRIPT_DIR/device/init-deps.sh"
+    send_script "$SCRIPT_DIR/deploy/init-deps.sh"
     local pi_usr=$(cut -d"@" -f1 <<<"$TARGET_HOST")
     send_command "sudo mkdir -v $TARGET_PATH && sudo chown -v $pi_usr:$pi_usr $TARGET_PATH --recursive"
 }
@@ -31,7 +31,7 @@ function init_device() {
 
 function install_device() {
     source "$SCRIPT_DIR"/device.sh
-    send_script "$SCRIPT_DIR/device/fix-mesa-libs.sh"
+    send_script "$SCRIPT_DIR/deploy/fix-mesa-libs.sh"
     local conf_path="/etc/ld.so.conf.d/00-qt5pi.conf"
     send_command "echo $TARGET_PATH/lib | sudo tee $conf_path && sudo ldconfig -v"
 }

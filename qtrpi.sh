@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 
 
-source ./utils.sh
-source ./ofmt.sh
+source ./scripts/tools/utils.sh
+source ./scripts/tools/ofmt.sh
 
 
 # -------------------------------------------------- GLOBALS
@@ -286,8 +286,8 @@ function cmd_run() {
 
 
 function cmd_build() {
-    source ./utils/build.sh
-    source ./utils/device.sh
+    source ./scripts/build.sh
+    source ./scripts/device.sh
 
     local cwd="$PWD"
 
@@ -313,7 +313,7 @@ function cmd_build() {
 
 
 function cmd_config() {
-    source ./utils/config.sh
+    source ./scripts/config.sh
 
     case "$1" in
         --local-path    ) set_local_path "$2" ;;
@@ -327,7 +327,7 @@ function cmd_config() {
 
 
 function cmd_reset() {
-    source ./utils/reset.sh
+    source ./scripts/reset.sh
 
     if [[ "$1" =~ ^(-a|--all)$ ]]; then
         reset_all
@@ -345,7 +345,7 @@ function cmd_reset() {
 
 
 function cmd_device() {
-    source ./utils/device.sh
+    source ./scripts/device.sh
 
     case "$1" in
         -y|--sync-sysroot ) sync_sysroot ;;
@@ -359,9 +359,9 @@ function cmd_device() {
 
 # -------------------------------------------------- ENVIRONMENT
 function check_variables() {
-    var_path="$PWD"/utils/source/variables.sh
+    var_path="$PWD"/scripts/common/variables.sh
     if [[ ! -f "$var_path" ]]; then
-        source ./utils/reset.sh
+        source ./scripts/reset.sh
         reset_config
     fi
 }
