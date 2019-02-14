@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 
-source utils.sh
+source ./utils.sh
 
 
 declare -A MARKUP_MAP=(
