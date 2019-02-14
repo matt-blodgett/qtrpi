@@ -1,4 +1,0 @@
-./qtrpi.sh: line 278: namespace: command not found
-./qtrpi.sh: line 289: build.build_init_local: command not found
-./qtrpi.sh: line 290: build.build_init_device: command not found
-sync_sysroot

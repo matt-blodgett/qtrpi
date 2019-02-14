@@ -12,19 +12,19 @@ source scripts/reset.sh
 source scripts/device.sh
 
 
+OPT_COMMAND=
 OPT_QUIET=false
 OPT_VERBOSE=false
+OPT_LOGFILE=""
 OPT_OUTPUT="all"
-OPT_COMMAND=""
 
 declare -n FLAG_MAP
 
 declare -A COMMON_FLAGS=(
     ["help"]="h"
-    ["quiet"]="q"
     ["verbose"]="v"
     ["output:"]=""
-    ["log-file:"]=""
+    ["logfile:"]=""
 )
 declare -A COMMAND_BUILD_FLAGS=(
     ["install"]=""
@@ -60,10 +60,9 @@ Scripts for building and deploying Qt to RaspberryPi devices
 
 Optional Flags:
  -h| --help              display this help text
- -q| --quiet             suppress all output
  -v| --verbose           output verbose messages
-   | --output            set the output style [status,normal,silent,all]
-   | --log-file
+   | --output            set the output level [all,quiet,silent]
+   | --logfile
 
 Command Flags:
 build                    Build Scripts
@@ -110,7 +109,7 @@ function qtrpi::validate_common_args() {
         fi
     done
 
-    local -a flags_mutex=( "-q" "--quiet" "-v" "--verbose" )
+    local -a flags_mutex=( "-v" "--verbose" )
     args::check_mutually_exclusive_flags args flags_mutex
 }
 
@@ -233,26 +232,25 @@ function main() {
 
         case "$arg" in
             -h|--help    ) qtrpi::usage 0 ;;
-            -q|--quiet   ) OPT_QUIET=true ;;
             -v|--verbose ) OPT_VERBOSE=true ;;
             --output     ) OPT_OUTPUT="${args_array[((++i))]}" ;;
+            --logfile    ) OPT_LOGFILE="${args_array[((++i))]}" ;;
             *            ) args_parsed+=( "$arg" ) ;;
         esac
 
         ((i++))
     done
 
-    msgs::initialize "$OPT_QUIET"
-
     args_array=( ${args_parsed[@]} )
     OPT_COMMAND="${args_array[0]}"
+
+    local -a output_types=( "all" "quiet" "silent" )
+    args::check_valid_choice "$OPT_OUTPUT" output_types "output"
+    msgs::initialize "$OPT_OUTPUT" "$OPT_LOGFILE"
 
     local -a command_types=( "build" "config" "reset" "device" )
     args::check_valid_choice "$OPT_COMMAND" command_types "command"
     qtrpi::validate_command_args args_array
-
-    local -a output_types=( "status" "normal" "silent" "all" )
-    args::check_valid_choice "$OPT_OUTPUT" output_types "output"
 
     local flags_short="$(array::join "" "${FLAG_MAP[@]}")"
     local flags_long="$(array::join "," "${!FLAG_MAP[@]}")"
@@ -306,34 +304,3 @@ function main() {
 
 
 main "$@"
-
-
-#set_ofmt -b
-#
-#echo "bold text"
-#
-#clr_ofmt
-#
-#echo "normal text"
-#
-#set_ofmt -b --foreground "magenta" --background "white"
-#
-#echo "magenta colour"
-#
-#clr_ofmt
-#
-#echo "default colour"
-#
-#set_ofmt --title "Temp Title"
-#
-#sleep 1
-#
-
-
-
-#echo -ne '#####                   (33%)\r'
-#sleep 1
-#echo -ne '#############           (66%)\r'
-#sleep 1
-#echo -ne '####################### (100%)\r'
-#echo -ne '\n'
