@@ -6,18 +6,18 @@ source "$SCRIPT_DIR"/source/variables.sh
 
 
 function init_local() {
-    sudo mkdir "$LOCAL_PATH"
-    sudo chown "$(whoami)":"$(whoami)" "$LOCAL_PATH" --recursive
+    sudo mkdir -v "$LOCAL_PATH"
+    sudo chown -v "$(whoami)":"$(whoami)" "$LOCAL_PATH" --recursive
 
-    mkdir "$LOCAL_PATH/logs"
-    mkdir "$LOCAL_PATH/modules"
+    mkdir -v "$LOCAL_PATH/logs"
+    mkdir -v "$LOCAL_PATH/modules"
 
-    mkdir "$LOCAL_PATH/raspi"
-    mkdir "$LOCAL_PATH/raspi/sysroot"
-    mkdir "$LOCAL_PATH/raspi/sysroot/usr"
-    mkdir "$LOCAL_PATH/raspi/sysroot/opt"
+    mkdir -v "$LOCAL_PATH/raspi"
+    mkdir -v "$LOCAL_PATH/raspi/sysroot"
+    mkdir -v "$LOCAL_PATH/raspi/sysroot/usr"
+    mkdir -v "$LOCAL_PATH/raspi/sysroot/opt"
 
-    git clone "https://github.com/raspberrypi/tools.git" "$LOCAL_PATH/raspi/tools"
+    git clone -v "https://github.com/raspberrypi/tools.git" "$LOCAL_PATH/raspi/tools"
 }
 
 
@@ -25,7 +25,7 @@ function init_device() {
     source "$SCRIPT_DIR"/device.sh
     send_script "$SCRIPT_DIR/device/init-deps.sh"
     local pi_usr=$(cut -d"@" -f1 <<<"$TARGET_HOST")
-    send_command "sudo mkdir $TARGET_PATH && sudo chown $pi_usr:$pi_usr $TARGET_PATH --recursive"
+    send_command "sudo mkdir -v $TARGET_PATH && sudo chown -v $pi_usr:$pi_usr $TARGET_PATH --recursive"
 }
 
 
@@ -33,7 +33,7 @@ function install_device() {
     source "$SCRIPT_DIR"/device.sh
     send_script "$SCRIPT_DIR/device/fix-mesa-libs.sh"
     local conf_path="/etc/ld.so.conf.d/00-qt5pi.conf"
-    send_command "echo $TARGET_PATH/lib | sudo tee $conf_path && sudo ldconfig"
+    send_command "echo $TARGET_PATH/lib | sudo tee $conf_path && sudo ldconfig -v"
 }
 
 
@@ -64,7 +64,7 @@ function build_qtbase() {
     local output_dir="$LOCAL_PATH/raspi/qt5pi"
     local output_host_dir="$LOCAL_PATH/raspi/qt5"
 
-    git clone "git://code.qt.io/qt/$qt_module.git" "$LOCAL_PATH/modules/$qt_module" -b "$QT_BRANCH"
+    git clone -v "git://code.qt.io/qt/$qt_module.git" "$LOCAL_PATH/modules/$qt_module" -b "$QT_BRANCH"
     cd "$LOCAL_PATH/modules/$qt_module"
     git checkout "tags/$QT_TAG"
 
@@ -81,6 +81,7 @@ EOL
     sed -i "s/\$\$QMAKE_CFLAGS -std=c++1z/\$\$QMAKE_CFLAGS -std=c++11/g" "$qmake_file"
 
     ./configure \
+        -verbose \
         -release \
         -opengl es2 \
         -make libs \
@@ -103,8 +104,8 @@ EOL
 function build_qtmodule() {
     local qt_module="$1"
 
-    git clone "git://code.qt.io/qt/$qt_module.git" "$LOCAL_PATH/modules/$qt_module" -b "$QT_BRANCH"
-    cd  "$LOCAL_PATH/modules/$qt_module"
+    git clone -v "git://code.qt.io/qt/$qt_module.git" "$LOCAL_PATH/modules/$qt_module" -b "$QT_BRANCH"
+    cd "$LOCAL_PATH/modules/$qt_module"
     git checkout "tags/$QT_TAG"
 
     cmd_qmake "$qt_module"
