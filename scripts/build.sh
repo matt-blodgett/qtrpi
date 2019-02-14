@@ -3,9 +3,16 @@
 
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 source "$SCRIPT_DIR"/common/variables.sh
+source "$SCRIPT_DIR"/device.sh
 
 
-function init_local() {
+function build::init_local() {
+    echo "init_local"
+    sleep 1
+    return 0
+
+
+
     sudo mkdir -v "$LOCAL_PATH"
     sudo chown -v "$(whoami)":"$(whoami)" "$LOCAL_PATH" --recursive
 
@@ -21,42 +28,58 @@ function init_local() {
 }
 
 
-function init_device() {
-    source "$SCRIPT_DIR"/device.sh
-    send_script "$SCRIPT_DIR/deploy/init-deps.sh"
+function build::init_device() {
+    echo "init_device"
+    sleep 1
+    return 0
+
+
+
+    device::send_script "$SCRIPT_DIR/deploy/init-deps.sh"
     local pi_usr=$(cut -d"@" -f1 <<<"$TARGET_HOST")
-    send_command "sudo mkdir -v $TARGET_PATH && sudo chown -v $pi_usr:$pi_usr $TARGET_PATH --recursive"
+    device::send_command "sudo mkdir -v $TARGET_PATH && sudo chown -v $pi_usr:$pi_usr $TARGET_PATH --recursive"
 }
 
 
-function install_device() {
-    source "$SCRIPT_DIR"/device.sh
-    send_script "$SCRIPT_DIR/deploy/fix-mesa-libs.sh"
+function build::install_device() {
+    echo "install_device"
+    sleep 1
+    return 0
+
+
+    device::send_script "$SCRIPT_DIR/deploy/fix-mesa-libs.sh"
     local conf_path="/etc/ld.so.conf.d/00-qt5pi.conf"
-    send_command "echo $TARGET_PATH/lib | sudo tee $conf_path && sudo ldconfig -v"
+    device::send_command "echo $TARGET_PATH/lib | sudo tee $conf_path && sudo ldconfig -v"
 }
 
 
-function cmd_qmake() {
+function build::qmake() {
     local log_file="${1:-default}"
     "$LOCAL_PATH"/raspi/qt5/bin/qmake -r |& tee "$LOCAL_PATH/logs/$log_file.log"
 }
 
 
-function cmd_make() {
+function build::make() {
     local log_file="${1:-default}"
     make -j 10 |& tee --append "$LOCAL_PATH/logs/$log_file.log"
     make install
 }
 
 
-function clean_module() {
+function build::clean_module() {
     cd "$LOCAL_PATH/modules/$1"
     git clean -dfx
 }
 
 
-function build_qtbase() {
+function build::qtbase() {
+    echo "build_qtbase"
+    sleep 3
+    return 0
+
+
+
+
     export CROSS_COMPILE="$LOCAL_PATH/raspi/tools/arm-bcm2708/gcc-linaro-arm-linux-gnueabihf-raspbian-x64/bin/arm-linux-gnueabihf-"
     export SYSROOT="$LOCAL_PATH/raspi/sysroot"
 
@@ -97,19 +120,19 @@ EOL
         -hostprefix "$output_host_dir" \
         |& tee "$LOCAL_PATH/logs/$qt_module.log"
 
-    cmd_make "$qt_module"
+    build::make "$qt_module"
 }
 
 
-function build_qtmodule() {
+function build::qtmodule() {
     local qt_module="$1"
 
     git clone -v "git://code.qt.io/qt/$qt_module.git" "$LOCAL_PATH/modules/$qt_module" -b "$QT_BRANCH"
     cd "$LOCAL_PATH/modules/$qt_module"
     git checkout "tags/$QT_TAG"
 
-    cmd_qmake "$qt_module"
-    cmd_make "$qt_module"
+    build::qmake "$qt_module"
+    build::make "$qt_module"
 }
 
 

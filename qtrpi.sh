@@ -1,11 +1,17 @@
 #!/usr/bin/env bash
 
 
-source ./scripts/tools/utils.sh
-source ./scripts/tools/ofmt.sh
+source scripts/utils/args.sh
+source scripts/utils/array.sh
+source scripts/utils/ofmt.sh
+source scripts/utils/msgs.sh
+
+source scripts/build.sh
+source scripts/config.sh
+source scripts/reset.sh
+source scripts/device.sh
 
 
-# -------------------------------------------------- GLOBALS
 OPT_QUIET=false
 OPT_VERBOSE=false
 OPT_OUTPUT="all"
@@ -18,6 +24,7 @@ declare -A COMMON_FLAGS=(
     ["quiet"]="q"
     ["verbose"]="v"
     ["output:"]=""
+    ["log-file:"]=""
 )
 declare -A COMMAND_BUILD_FLAGS=(
     ["install"]=""
@@ -46,8 +53,7 @@ declare -A COMMAND_DEVICE_FLAGS=(
 )
 
 
-# -------------------------------------------------- USAGE
-function show_usage() {
+function qtrpi::usage() {
     cat <<EOF
 Usage: qtrpi.py [-h|-q|-v] [--output level] COMMAND [<options>]
 Scripts for building and deploying Qt to RaspberryPi devices
@@ -57,6 +63,7 @@ Optional Flags:
  -q| --quiet             suppress all output
  -v| --verbose           output verbose messages
    | --output            set the output style [status,normal,silent,all]
+   | --log-file
 
 Command Flags:
 build                    Build Scripts
@@ -93,140 +100,22 @@ EOF
 }
 
 
-# -------------------------------------------------- ERRORS
-function show_error() {
-    local err_msg="$1"
-    if [[ "$err_msg" ]]; then
-        set_ofmt -b --foreground "red"
-        echo "$err_msg"
-        clr_ofmt -a
-    fi
-
-    echo "use 'qtrpi.sh --help' for show_usage"
-    exit 1
-}
-
-
-function should_error() {
-    if [[ (($1 != 0)) ]]; then show_error; fi
-}
-
-
-function invalid_command() {
-    if [[ "$OPT_COMMAND" != "" ]]; then
-        show_error "invalid command '$OPT_COMMAND'";
-    else
-        show_error "missing required positional argument 'command'"
-    fi
-}
-
-
-function invalid_flag() {
-    show_error "unrecognized flag '$1'"
-}
-
-
-# -------------------------------------------------- CHECKS
-function check_duplicate_flags() {
-    local -n _args=$1
-    local flag1="$2"
-    local flag2="$3"
-
-    if [[ $(in_array "$flag1" _args) && $(in_array "$flag2" _args) ]]; then
-        show_error "duplicate flags '$flag1' and '$flag2'"
-    fi
-}
-
-
-function check_required_flags() {
-    local -n _args=$1
-    local -n _flags=$2
-
-    local found=false
-    for arg in ${_args[@]}; do
-        if [[ "$arg" == -* ]]; then
-            if [[ $(in_array "$arg" _flags) ]]; then
-                found=true
-                break
-            fi
-        fi
-    done
-
-    if [[ "$found" == false ]]; then
-        show_error "missing required flags"
-    fi
-}
-
-
-function check_mutually_exclusive_flags() {
-    local -n _args=$1
-    local -n _flags=$2
-
-    local found=""
-    for arg in ${_args[@]}; do
-        if [[ "$arg" == -* ]]; then
-            if [[ $(in_array "$arg" _flags) ]]; then
-                if [[ "$found" != "" ]]; then
-                    show_error "cannot use both flags '$found' and '$arg'"
-                fi
-                found="$arg"
-            fi
-        fi
-    done
-}
-
-
-function check_unrecognized_flags() {
-    local -n _args=$1
-    local -n _flags=$2
-
-    for arg in ${_args[@]}; do
-        if [[ "$arg" == -* ]]; then
-            if [[ ! $(in_array "$arg" _flags) ]]; then
-                invalid_flag "$arg"
-            fi
-        fi
-    done
-}
-
-
-# -------------------------------------------------- VALIDATION
-function parse_short_flags() {
-    local -n args=$1
-
-    local -a args_parsed=()
-    for arg in ${args[@]}; do
-        if [[ "$arg" == -* && "$arg" != --* && "${#arg}" > 2 ]]; then
-            for c in $(echo "${arg:1}" | sed -e 's/\(.\)/\1\n/g'); do
-                if [[ ! $(in_array "-$c" _flags_short) ]]; then
-                    args_parsed+=( "-$c" )
-                fi
-            done
-        else
-            args_parsed+=( "$arg" )
-        fi
-    done
-
-    echo ${args_parsed[@]}
-}
-
-
-function validate_common_args() {
+function qtrpi::validate_common_args() {
     local -n args=$1
 
     for key in "${!COMMON_FLAGS[@]}"; do
         value="${COMMON_FLAGS[$key]}"
         if [[ "$value" ]]; then
-            check_duplicate_flags args "$key" "$value"
+            args::check_duplicate_flags args "$key" "$value"
         fi
     done
 
     local -a flags_mutex=( "-q" "--quiet" "-v" "--verbose" )
-    check_mutually_exclusive_flags args flags_mutex
+    args::check_mutually_exclusive_flags args flags_mutex
 }
 
 
-function validate_command_args() {
+function qtrpi::validate_command_args() {
     local -n args=$1
 
     local mutex=true
@@ -235,7 +124,6 @@ function validate_command_args() {
         config ) FLAG_MAP=COMMAND_CONFIG_FLAGS; mutex=false ;;
         reset  ) FLAG_MAP=COMMAND_RESET_FLAGS; mutex=false ;;
         device ) FLAG_MAP=COMMAND_DEVICE_FLAGS ;;
-        *      ) invalid_command ;;
     esac
 
     local -a flags=()
@@ -244,150 +132,107 @@ function validate_command_args() {
         value="${FLAG_MAP[$key]}"
         if [[ "$value" ]]; then
             flags+=( "-$(cut -f1 -d: <<<"$value")" )
-            check_duplicate_flags args "$key" "$value"
+            args::check_duplicate_flags args "$key" "$value"
         fi
     done
 
-    check_unrecognized_flags args flags
-    check_required_flags args flags
+    args::check_unrecognized_flags args flags
+    args::check_required_flags args flags
 
     if [[ "$mutex" == true ]]; then
-        check_mutually_exclusive_flags args flags
+        args::check_mutually_exclusive_flags args flags
     fi
 }
 
 
-function validate_output_type() {
-    local -a output_types=( "status" "normal" "silent" "all" )
-
-    local valid_type=false
-    for output_type in ${output_types[@]}; do
-        if [[ "$OPT_OUTPUT" == "$output_type" ]]; then
-            valid_type=true
-            break
-        fi
-    done
-
-    if [[ "$valid_type" == false ]]; then
-        local valid_choices="valid choices are [$(join_array "," ${output_types[@]})]"
-        show_error "invalid output type '$OPT_OUTPUT' -- $valid_choices"
-    fi
-}
-
-
-# -------------------------------------------------- COMMANDS
-function cmd_run() {
-    if [[ "$OPT_QUIET" == true ]]; then
-        $1 "${@:2}" &>/dev/null
-    else
-        $1 "${@:2}"
-    fi
-}
-
-
-function cmd_build() {
-    source ./scripts/build.sh
-    source ./scripts/device.sh
-
+function qtrpi::build() {
     local cwd="$PWD"
 
     case "$1" in
         --install )
-            init_local
-            init_device
-            sync_sysroot
-            build_qtbase
+
+            msgs::status_message "test1"
+            msgs::error_message "error test"
+
+
+            build::init_local
+            build::init_device
+            device::sync_sysroot
+            build::qtbase
             cd "$cwd"
-            install_device
-            sync_sysroot
+            build::install_device
+            device::sync_sysroot
         ;;
         --rebuild )
-            sync_sysroot
-            clean_module "qtbase"
-            build_qtbase
+            device::sync_sysroot
+            build::clean_module "qtbase"
+            build::qtbase
             cd "$cwd"
-            sync_sysroot
+            device::sync_sysroot
         ;;
     esac
 }
 
 
-function cmd_config() {
-    source ./scripts/config.sh
-
+function qtrpi::config() {
     case "$1" in
-        --local-path    ) set_local_path "$2" ;;
-        --target-path   ) set_target_path "$2" ;;
-        --target-host   ) set_target_host "$2" ;;
-        --target-device ) set_target_device "$2" ;;
-        --qt-branch     ) set_qt_branch "$2" ;;
-        --qt-tag        ) set_qt_tag "$2" ;;
+        --local-path    ) config::set_local_path "$2" ;;
+        --target-path   ) config::set_target_path "$2" ;;
+        --target-host   ) config::set_target_host "$2" ;;
+        --target-device ) config::set_target_device "$2" ;;
+        --qt-branch     ) config::set_qt_branch "$2" ;;
+        --qt-tag        ) config::set_qt_tag "$2" ;;
     esac
 }
 
 
-function cmd_reset() {
-    source ./scripts/reset.sh
-
+function qtrpi::reset() {
     if [[ "$1" =~ ^(-a|--all)$ ]]; then
-        reset_all
+        reset::all
         exit 0
     fi
 
     for arg in $@; do
         case "$arg" in
-            -b|--build  ) reset_build ;;
-            -c|--config ) reset_config ;;
-            -d|--device ) reset_device ;;
+            -b|--build  ) reset::build ;;
+            -c|--config ) reset::config ;;
+            -d|--device ) reset::device ;;
         esac
     done
 }
 
 
-function cmd_device() {
-    source ./scripts/device.sh
-
+function qtrpi::device() {
     case "$1" in
-        -y|--sync-sysroot ) sync_sysroot ;;
-        -f|--send-file    ) send_file "$2" "$3" ;;
-        -s|--send-script  ) send_script "$2" ;;
-        -c|--send-command ) send_command "$2" ;;
-        -a|--set-ssh-auth ) set_ssh_auth ;;
+        -y|--sync-sysroot ) device::sync_sysroot ;;
+        -f|--send-file    ) device::send_file "$2" "$3" ;;
+        -s|--send-script  ) device::send_script "$2" ;;
+        -c|--send-command ) device::send_command "$2" ;;
+        -a|--set-ssh-auth ) device::set_ssh_auth ;;
     esac
 }
 
 
-# -------------------------------------------------- ENVIRONMENT
-function check_variables() {
-    var_path="$PWD"/scripts/common/variables.sh
-    if [[ ! -f "$var_path" ]]; then
-        source ./scripts/reset.sh
-        reset_config
-    fi
+function qtrpi::check_variables() {
+    local var_path="$PWD"/scripts/common/variables.sh
+    if [[ ! -f "$var_path" ]]; then reset::config; fi
 }
 
 
-# -------------------------------------------------- MISC
-function update_title() {
-    set_ofmt --title "qtrpi | $OPT_COMMAND | $1"
-}
-
-
-# -------------------------------------------------- MAIN
 function main() {
-    cmd_run check_variables
+    qtrpi::check_variables
 
     local -a args_array=( $@ )
-    local -a args_parsed=$(parse_short_flags args_array)
+    local -a args_parsed=$(args::parse_short_flags args_array)
     args_array=( ${args_parsed[@]} )
     args_parsed=()
 
-    validate_common_args args_array
+    qtrpi::validate_common_args args_array
     while [[ $i -lt ${#args_array[@]} ]]; do
         local arg="${args_array[$i]}"
 
         case "$arg" in
-            -h|--help    ) show_usage 0 ;;
+            -h|--help    ) qtrpi::usage 0 ;;
             -q|--quiet   ) OPT_QUIET=true ;;
             -v|--verbose ) OPT_VERBOSE=true ;;
             --output     ) OPT_OUTPUT="${args_array[((++i))]}" ;;
@@ -397,29 +242,34 @@ function main() {
         ((i++))
     done
 
+    msgs::initialize "$OPT_QUIET"
+
     args_array=( ${args_parsed[@]} )
-    args_parsed=()
-
     OPT_COMMAND="${args_array[0]}"
-    validate_command_args args_array
-    validate_output_type
 
-    local flags_short="$(join_array "" "${FLAG_MAP[@]}")"
-    local flags_long="$(join_array "," "${!FLAG_MAP[@]}")"
+    local -a command_types=( "build" "config" "reset" "device" )
+    args::check_valid_choice "$OPT_COMMAND" command_types "command"
+    qtrpi::validate_command_args args_array
+
+    local -a output_types=( "status" "normal" "silent" "all" )
+    args::check_valid_choice "$OPT_OUTPUT" output_types "output"
+
+    local flags_short="$(array::join "" "${FLAG_MAP[@]}")"
+    local flags_long="$(array::join "," "${!FLAG_MAP[@]}")"
     local flags_getopt=$(getopt -o "$flags_short" --longoptions "$flags_long" -- "${args_array[@]}")
-    should_error $?
+    args::check_exit_code $?
 
     eval set -- "$flags_getopt"
-    should_error $?
+    args::check_exit_code $?
 
     case "$OPT_COMMAND" in
         build )
-            cmd_run cmd_build "$1"
+            qtrpi::build "$1"
         ;;
         config )
             while true; do
                 if [[ "$1" == "--" ]]; then break; fi
-                cmd_run cmd_config "$1" "$2"
+                qtrpi::config "$1" "$2"
                 shift 2
             done
         ;;
@@ -436,26 +286,54 @@ function main() {
                 esac
             done
 
-            cmd_run cmd_reset ${resets[@]}
+            qtrpi::reset ${resets[@]}
         ;;
         device )
             case "$1" in
-                -a|--set-ssh-auth ) cmd_run cmd_device "$1" ;;
-                -y|--sync-sysroot ) cmd_run cmd_device "$1" ;;
-                -s|--send-script  ) cmd_run cmd_device "$1" "$2" ;;
-                -c|--send-command ) cmd_run cmd_device "$1" "$2" ;;
+                -a|--set-ssh-auth ) qtrpi::device "$1" ;;
+                -y|--sync-sysroot ) qtrpi::device "$1" ;;
+                -s|--send-script  ) qtrpi::device "$1" "$2" ;;
+                -c|--send-command ) qtrpi::device "$1" "$2" ;;
                 -f|--send-file    )
-                    local arg1=$(index_offset "$1" 1 args_array)
-                    local arg2=$(index_offset "$1" 2 args_array)
-                    cmd_run cmd_device "$1" "$arg1" "$arg2"
+                    local arg1=$(array::value_offset "$1" 1 args_array)
+                    local arg2=$(array::value_offset "$1" 2 args_array)
+                    qtrpi::device "$1" "$arg1" "$arg2"
                 ;;
             esac
-        ;;
-        * )
-            invalid_command
         ;;
     esac
 }
 
 
 main "$@"
+
+
+#set_ofmt -b
+#
+#echo "bold text"
+#
+#clr_ofmt
+#
+#echo "normal text"
+#
+#set_ofmt -b --foreground "magenta" --background "white"
+#
+#echo "magenta colour"
+#
+#clr_ofmt
+#
+#echo "default colour"
+#
+#set_ofmt --title "Temp Title"
+#
+#sleep 1
+#
+
+
+
+#echo -ne '#####                   (33%)\r'
+#sleep 1
+#echo -ne '#############           (66%)\r'
+#sleep 1
+#echo -ne '####################### (100%)\r'
+#echo -ne '\n'

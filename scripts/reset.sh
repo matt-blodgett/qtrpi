@@ -3,23 +3,35 @@
 
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 source "$SCRIPT_DIR"/common/variables.sh
+source "$SCRIPT_DIR"/device.sh
 
 
-function reset_build() {
+function reset::build() {
+    echo "reset_build"
+    sleep 2
+    return 0
+
     sudo rm -rfv "$LOCAL_PATH"
 }
 
 
-function reset_device() {
-    source "$SCRIPT_DIR"/device.sh
-    send_command "sudo rm -rfv $TARGET_PATH"
+function reset::device() {
+    echo "reset_device"
+    sleep 2
+    return 0
+
+    device::send_command "sudo rm -rfv $TARGET_PATH"
 }
 
 
-function reset_config() {
+function reset::config() {
+    echo "reset_config"
+    sleep 2
+    return 0
+
+
     cat > "$SCRIPT_DIR"/common/variables.sh <<EOF
 #!/usr/bin/env bash
-
 LOCAL_PATH="/opt/qtrpi"
 TARGET_PATH="/usr/local/qt5pi"
 TARGET_HOST=""
@@ -32,8 +44,12 @@ EOF
 }
 
 
-function reset_all() {
-    reset_build
-    reset_device
-    reset_config
+function reset::all() {
+    echo "reset_all"
+    sleep 2
+    return 0
+
+    reset::build
+    reset::device
+    reset::config
 }
