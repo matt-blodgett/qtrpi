@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 
 
-source $PWD/utils/source/variables.sh
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+source "$SCRIPT_DIR"/source/variables.sh
 
 
 function set_ssh_auth() {
@@ -17,7 +18,7 @@ function sync_sysroot() {
     rsync -avz "$TARGET_HOST:/opt/vc" "$LOCAL_PATH/raspi/sysroot/opt"
     rsync -avz "$LOCAL_PATH/raspi/qt5pi" "$TARGET_HOST:/usr/local"
 
-    $PWD/utils/sysroot-relativelinks.py "$LOCAL_PATH/raspi/sysroot"
+    "$SCRIPT_DIR"/sysroot-relativelinks.py "$LOCAL_PATH/raspi/sysroot"
 }
 
 

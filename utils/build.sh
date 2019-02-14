@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 
 
-source $PWD/utils/source/variables.sh
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+source "$SCRIPT_DIR"/source/variables.sh
 
 
 function init_local() {
@@ -21,16 +22,16 @@ function init_local() {
 
 
 function init_device() {
-    source $PWD/utils/device.sh
-    send_script "$PWD/utils/device/init-deps.sh"
+    source "$SCRIPT_DIR"/device.sh
+    send_script "$SCRIPT_DIR/device/init-deps.sh"
     local pi_usr=$(cut -d"@" -f1 <<<"$TARGET_HOST")
     send_command "sudo mkdir $TARGET_PATH && sudo chown $pi_usr:$pi_usr $TARGET_PATH --recursive"
 }
 
 
 function install_device() {
-    source $PWD/utils/device.sh
-    send_script "$PWD/utils/device/fix-mesa-libs.sh"
+    source "$SCRIPT_DIR"/device.sh
+    send_script "$SCRIPT_DIR/device/fix-mesa-libs.sh"
     local conf_path="/etc/ld.so.conf.d/00-qt5pi.conf"
     send_command "echo $TARGET_PATH/lib | sudo tee $conf_path && sudo ldconfig"
 }
@@ -64,7 +65,7 @@ function build_qtbase() {
     local output_host_dir="$LOCAL_PATH/raspi/qt5"
 
     git clone "git://code.qt.io/qt/$qt_module.git" "$LOCAL_PATH/modules/$qt_module" -b "$QT_BRANCH"
-    cd  "$LOCAL_PATH/modules/$qt_module"
+    cd "$LOCAL_PATH/modules/$qt_module"
     git checkout "tags/$QT_TAG"
 
     local qmake_file="mkspecs/devices/$TARGET_DEVICE/qmake.conf"
@@ -111,6 +112,3 @@ function build_qtmodule() {
 }
 
 
-function reset_build() {
-    sudo rm -rfv "$LOCAL_PATH"
-}

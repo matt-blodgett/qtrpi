@@ -13,9 +13,9 @@ readonly COMMAND="$1"
 declare -n FLAG_MAP
 
 declare -A COMMON_FLAGS=(
-    ["--help"]="-h"
-    ["--quiet"]="-q"
-    ["--verbose"]="-v"
+    ["help"]="h"
+    ["quiet"]="q"
+    ["verbose"]="v"
 )
 declare -A COMMAND_BUILD_FLAGS=(
     ["install"]=""
@@ -33,6 +33,7 @@ declare -A COMMAND_RESET_FLAGS=(
     ["all"]="a"
     ["build"]="b"
     ["config"]="c"
+    ["device"]="d"
 )
 declare -A COMMAND_DEVICE_FLAGS=(
     ["set-ssh-auth"]="a"
@@ -67,8 +68,9 @@ config                   Set Configuration Variables
 
 reset                    Reset And Clean
  -a| --all               reset both build and config
- -b| --build             reset qtrpi build process and clean
+ -b| --build             reset local qtrpi build process and clean
  -c| --config            reset all config variables to default
+ -d| --device            reset remote device build process and clean
 
 device                   Device Utils
  -a| --set-ssh-auth      set ssh key and add to known hosts
@@ -279,12 +281,10 @@ function cmd_config() {
 
 
 function cmd_reset() {
-    source ./utils/config.sh
-    source ./utils/build.sh
+    source ./utils/reset.sh
 
     if [[ "$1" =~ ^(-a|--all)$ ]]; then
-        reset_config
-        reset_build
+        reset_all
         exit 0
     fi
 
@@ -292,6 +292,7 @@ function cmd_reset() {
         case "$arg" in
             -b|--build  ) reset_build ;;
             -c|--config ) reset_config ;;
+            -d|--device ) reset_device ;;
         esac
     done
 }
@@ -312,9 +313,9 @@ function cmd_device() {
 
 # -------------------------------------------------- ENVIRONMENT
 function check_variables() {
-    var_path=$PWD/utils/source/variables.sh
+    var_path="$PWD"/utils/source/variables.sh
     if [[ ! -f "$var_path" ]]; then
-        source ./utils/config.sh
+        source ./utils/reset.sh
         reset_config
     fi
 }
@@ -359,6 +360,7 @@ function main() {
                     -a|--all    ) resets=( "-b" "-c" ); break ;;
                     -b|--build  ) resets+=( "-b" ); shift ;;
                     -c|--config ) resets+=( "-c" ); shift ;;
+                    -d|--device ) resets+=( "-d" ); shift ;;
                     -- ) shift ;;
                     *  ) break ;;
                 esac
