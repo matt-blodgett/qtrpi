@@ -2,12 +2,12 @@
 
 
 function reset::build() {
-    sudo rm -rf "$LOCAL_PATH" $OPT_VERBOSE
+    sudo rm -rf "$VAR_LOCAL_PATH" $OPT_VERBOSE
 }
 
 
 function reset::device() {
-    device::send_command "sudo rm -rf $TARGET_PATH $OPT_VERBOSE "
+    device::send_command "sudo rm -rf $VAR_TARGET_PATH $OPT_VERBOSE "
 }
 
 
@@ -16,12 +16,12 @@ function reset::config() {
 
     local vars=$(cat <<EOF
 #!/usr/bin/env bash
-LOCAL_PATH="/opt/qtrpi"
-TARGET_PATH="/usr/local/qt5pi"
-TARGET_HOST=""
-TARGET_DEVICE="linux-rasp-pi3-g++"
-QT_BRANCH="5.10"
-QT_TAG="v5.10.1"
+VAR_LOCAL_PATH="/opt/qtrpi"
+VAR_TARGET_PATH="/usr/local/qt5pi"
+VAR_TARGET_HOST=""
+VAR_TARGET_DEVICE="linux-rasp-pi3-g++"
+VAR_QT_BRANCH="5.10"
+VAR_QT_TAG="v5.10.1"
 EOF
 )
 

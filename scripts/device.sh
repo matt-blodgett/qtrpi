@@ -3,30 +3,30 @@
 
 function device::set_ssh_auth() {
     yes "" | ssh-keygen -t rsa
-    ssh-copy-id -i "~/.ssh/id_rsa.pub" "$TARGET_HOST"
+    ssh-copy-id -i "~/.ssh/id_rsa.pub" "$VAR_TARGET_HOST"
 }
 
 
 function device::sync_sysroot() {
-    rsync -az $OPT_VERBOSE "$TARGET_HOST:/lib" "$LOCAL_PATH/raspi/sysroot"
-    rsync -az $OPT_VERBOSE "$TARGET_HOST:/usr/include" "$LOCAL_PATH/raspi/sysroot/usr"
-    rsync -az $OPT_VERBOSE "$TARGET_HOST:/usr/lib" "$LOCAL_PATH/raspi/sysroot/usr"
-    rsync -az $OPT_VERBOSE "$TARGET_HOST:/opt/vc" "$LOCAL_PATH/raspi/sysroot/opt"
-    rsync -az $OPT_VERBOSE "$LOCAL_PATH/raspi/qt5pi" "$TARGET_HOST:/usr/local"
+    rsync -az $OPT_VERBOSE "$VAR_TARGET_HOST:/lib" "$VAR_LOCAL_PATH/raspi/sysroot"
+    rsync -az $OPT_VERBOSE "$VAR_TARGET_HOST:/usr/include" "$VAR_LOCAL_PATH/raspi/sysroot/usr"
+    rsync -az $OPT_VERBOSE "$VAR_TARGET_HOST:/usr/lib" "$VAR_LOCAL_PATH/raspi/sysroot/usr"
+    rsync -az $OPT_VERBOSE "$VAR_TARGET_HOST:/opt/vc" "$VAR_LOCAL_PATH/raspi/sysroot/opt"
+    rsync -az $OPT_VERBOSE "$VAR_LOCAL_PATH/raspi/qt5pi" "$VAR_TARGET_HOST:/usr/local"
 
-    "$PWD"/scripts/sysroot-relativelinks.py "$LOCAL_PATH/raspi/sysroot" $OPT_VERBOSE
+    "$PWD"/scripts/sysroot-relativelinks.py "$VAR_LOCAL_PATH/raspi/sysroot" $OPT_VERBOSE
 }
 
 
 function device::send_command() {
     local command="$1"
-    ssh "$TARGET_HOST" "$command"
+    ssh "$VAR_TARGET_HOST" "$command"
 }
 
 
 function device::send_script() {
     local script_path="$1"
-    cat "$script_path" | ssh "$TARGET_HOST"
+    cat "$script_path" | ssh "$VAR_TARGET_HOST"
 }
 
 
@@ -39,6 +39,6 @@ function device::send_file() {
     pi_command+="sudo cp ~/$source_file_name $target_path $OPT_VERBOSE "
     pi_command+="&& rm ~/$source_file_name $OPT_VERBOSE"
 
-    scp "$source_path" "$TARGET_HOST:~/$source_file_name"
+    scp "$source_path" "$VAR_TARGET_HOST:~/$source_file_name"
     device::send_command "$pi_command"
 }
