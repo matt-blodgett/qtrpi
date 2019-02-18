@@ -1,8 +1,14 @@
 #!/usr/bin/env bash
 
 
+function config::status() { msgs::status "${MSGS_PREFIX[config]} $1"; }
+function config::verbose() { msgs::verbose "${MSGS_PREFIX[config]} $1"; }
+
+
 function config::set_variable_line() {
+    config::verbose "Setting variable '$2'"
     sed -i "$1s|.*|$2|" "$PWD/scripts/common/variables.sh"
+    msgs::check_exit_code "$?"
 }
 
 

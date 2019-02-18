@@ -122,6 +122,7 @@ function ofmt::clr_format() {
             -t|--text       ) ofmt::set_clear "text"; shift ;;
             -f|--foreground ) ofmt::set_clear "foreground"; shift ;;
             -b|--background ) ofmt::set_clear "background"; shift ;;
+            --title         ) ofmt::set_console_title ""; shift ;;
             * ) break ;;
         esac
     done

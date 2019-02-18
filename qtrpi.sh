@@ -149,18 +149,60 @@ function qtrpi::validate_command_args() {
 function qtrpi::build() {
     case "$1" in
         --install )
+            local title_prefix="qtrpi: install step"
+            local step_number=1
+            local step_total=6
+            local title=""
+
+            title="$title_prefix $((step_number++)) of $step_total"
+            ofmt::set_format --title "$title" >&3
             build::init_local
+
+            title="$title_prefix $((step_number++)) of $step_total"
+            ofmt::set_format --title "$title" >&3
             build::init_device
+
+            title="$title_prefix $((step_number++)) of $step_total"
+            ofmt::set_format --title "$title" >&3
             device::sync_sysroot
+
+            title="$title_prefix $((step_number++)) of $step_total"
+            ofmt::set_format --title "$title" >&3
             build::build_qtbase
+
+            title="$title_prefix $((step_number++)) of $step_total"
+            ofmt::set_format --title "$title" >&3
             build::install_device
+
+            title="$title_prefix $((step_number++)) of $step_total"
+            ofmt::set_format --title "$title" >&3
             device::sync_sysroot
+
+            ofmt::set_format --title "" >&3
         ;;
         --rebuild )
+            local title_prefix="qtrpi: rebuild step"
+            local step_number=1
+            local step_total=4
+            local title=""
+
+            title="$title_prefix $((step_number++)) of $step_total"
+            ofmt::set_format --title "$title" >&3
             device::sync_sysroot
+
+            title="$title_prefix $((step_number++)) of $step_total"
+            ofmt::set_format --title "$title" >&3
             build::clean_module "qtbase"
+
+            title="$title_prefix $((step_number++)) of $step_total"
+            ofmt::set_format --title "$title" >&3
             build::build_qtbase
+
+            title="$title_prefix $((step_number++)) of $step_total"
+            ofmt::set_format --title "$title" >&3
             device::sync_sysroot
+
+            ofmt::set_format --title "" >&3
         ;;
     esac
 }

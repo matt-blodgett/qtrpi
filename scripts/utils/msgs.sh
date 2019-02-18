@@ -5,6 +5,15 @@ SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 source "$SCRIPT_DIR"/ofmt.sh
 
 
+declare -A MSGS_PREFIX=(
+    ["main"]="qtrpi | main   |"
+    ["build"]="qtrpi | build  |"
+    ["config"]="qtrpi | config |"
+    ["device"]="qtrpi | device |"
+    ["reset"]="qtrpi | reset  |"
+)
+
+
 function msgs::initialize() {
     case "$OPT_OUTPUT" in
         all )
@@ -61,23 +70,39 @@ function msgs::confirm() {
 
 
 function msgs::status() {
-    local sts_msg="$1"
-    if [[ "$sts_msg" ]]; then
-        echo "$sts_msg" >&3
+    local status_msg="$1"
+    if [[ "$status_msg" ]]; then
+        ofmt::set_format -b --foreground "cyan" >&3
+        echo "$status_msg" >&3
+        ofmt::clr_format -a >&3
+
+        sleep 1
+    fi
+}
+
+
+function msgs::verbose() {
+    local verbose_message="$1"
+    if [[ "$verbose_message" && "$OPT_VERBOSE" ]]; then
+        echo "$verbose_message" >&3
     fi
 }
 
 
 function msgs::error() {
-    local err_msg="$1"
-    if [[ "$err_msg" ]]; then
+    local error_msg="$1"
+    if [[ "$error_msg" ]]; then
         ofmt::set_format -b --foreground "red" >&3
-        echo "$err_msg" >&3
+        echo "$error_msg" >&3
         ofmt::clr_format -a >&3
     fi
 }
 
 
-function msgs::title() {
-    ofmt::set_format --title "qtrpi | $OPT_COMMAND | $1"
+function msgs::check_exit_code() {
+    local exit_code="$1"
+    if [[ "$exit_code" != 0 ]]; then
+        msgs::error "the program exited unexpectedly with code $1"
+        exit "$1"
+    fi
 }

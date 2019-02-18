@@ -1,17 +1,28 @@
 #!/usr/bin/env bash
 
 
+function reset::status() { msgs::status "${MSGS_PREFIX[reset]} $1"; }
+function reset::verbose() { msgs::verbose "${MSGS_PREFIX[reset]} $1"; }
+
+
 function reset::build() {
+    reset::status "Removing local build files from '$VAR_LOCAL_PATH'"
     sudo rm -rf "$VAR_LOCAL_PATH" $OPT_VERBOSE
+    msgs::check_exit_code "$?"
+    reset::status "Successfully removed local build files from '$VAR_LOCAL_PATH'"
 }
 
 
 function reset::device() {
-    device::send_command "sudo rm -rf $VAR_TARGET_PATH $OPT_VERBOSE "
+    reset::status "Removing remote build files from '$VAR_TARGET_PATH' on '$VAR_TARGET_HOST'"
+    device::send_command "sudo rm -rf $VAR_TARGET_PATH $OPT_VERBOSE"
+    reset::status "Successfully removed remote build files from '$VAR_TARGET_PATH' on '$VAR_TARGET_HOST'"
 }
 
 
 function reset::config() {
+    reset::status "Resetting program variables to defaults"
+
     local reset_only="$1"
 
     local vars=$(cat <<EOF
@@ -54,6 +65,8 @@ EOF
         head -c -1 "$temp_file" > "$path_opts"
         rm "$temp_file"
     fi
+
+    reset::status "Successfully reset program variables to defaults"
 }
 
 
