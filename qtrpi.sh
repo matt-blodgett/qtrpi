@@ -152,7 +152,7 @@ function qtrpi::build() {
             build::init_local
             build::init_device
             device::sync_sysroot
-            build::qtbase
+            build::build_qtbase
             cd "$cwd"
             build::install_device
             device::sync_sysroot
@@ -160,7 +160,7 @@ function qtrpi::build() {
         --rebuild )
             device::sync_sysroot
             build::clean_module "qtbase"
-            build::qtbase
+            build::build_qtbase
             cd "$cwd"
             device::sync_sysroot
         ;;

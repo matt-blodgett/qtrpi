@@ -55,7 +55,7 @@ function build::clean_module() {
 }
 
 
-function build::qtbase() {
+function build::build_qtbase() {
     export CROSS_COMPILE="$LOCAL_PATH/raspi/tools/arm-bcm2708/gcc-linaro-arm-linux-gnueabihf-raspbian-x64/bin/arm-linux-gnueabihf-"
     export SYSROOT="$LOCAL_PATH/raspi/sysroot"
 
@@ -100,7 +100,7 @@ EOL
 }
 
 
-function build::qtmodule() {
+function build::build_qtmodule() {
     local qt_module="$1"
 
     git clone -v "git://code.qt.io/qt/$qt_module.git" "$LOCAL_PATH/modules/$qt_module" -b "$QT_BRANCH"
