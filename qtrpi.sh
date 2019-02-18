@@ -149,11 +149,6 @@ function qtrpi::build() {
 
     case "$1" in
         --install )
-
-            msgs::status_message "test1"
-            msgs::error_message "error test"
-
-
             build::init_local
             build::init_device
             device::sync_sysroot

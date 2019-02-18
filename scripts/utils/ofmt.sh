@@ -6,62 +6,63 @@ source "$SCRIPT_DIR"/array.sh
 
 
 declare -A MARKUP_MAP=(
-    ["bold"]="\e[1m"
-    ["dim"]="\e[2m"
-    ["underlined"]="\e[4m"
-    ["blinking"]="\e[5m"
-    ["hidden"]="\e[8m"
+    ["bold"]="1"
+    ["dim"]="2"
+    ["underlined"]="4"
+    ["blinking"]="5"
+    ["hidden"]="8"
 )
 declare -A FOREGROUND_MAP=(
-    ["default"]="\e[39m"
-    ["black"]="\e[30m"
-    ["red"]="\e[31m"
-    ["green"]="\e[32m"
-    ["yellow"]="\e[33m"
-    ["blue"]="\e[34m"
-    ["magenta"]="\e[35m"
-    ["cyan"]="\e[36m"
-    ["light_gray"]="\e[37m"
-    ["dark_gray"]="\e[90m"
-    ["light_red"]="\e[91m"
-    ["light_green"]="\e[92m"
-    ["light_yellow"]="\e[93m"
-    ["light_blue"]="\e[94m"
-    ["light_magenta"]="\e[95m"
-    ["light_cyan"]="\e[96m"
-    ["white"]="\e[97m"
+    ["default"]="39"
+    ["black"]="30"
+    ["red"]="31"
+    ["green"]="32"
+    ["yellow"]="33"
+    ["blue"]="34"
+    ["magenta"]="35"
+    ["cyan"]="36"
+    ["light_gray"]="37"
+    ["dark_gray"]="90"
+    ["light_red"]="91"
+    ["light_green"]="92"
+    ["light_yellow"]="93"
+    ["light_blue"]="94"
+    ["light_magenta"]="95"
+    ["light_cyan"]="96"
+    ["white"]="97"
 )
 declare -A BACKGROUND_MAP=(
-    ["default"]="\e[49m"
-    ["black"]="\e[40m"
-    ["red"]="\e[41m"
-    ["green"]="\e[42m"
-    ["yellow"]="\e[43m"
-    ["blue"]="\e[44m"
-    ["magenta"]="\e[45m"
-    ["cyan"]="\e[46m"
-    ["light_gray"]="\e[47m"
-    ["dark_gray"]="\e[100m"
-    ["light_red"]="\e[101m"
-    ["light_green"]="\e[102m"
-    ["light_yellow"]="\e[103m"
-    ["light_blue"]="\e[104m"
-    ["light_magenta"]="\e[105m"
-    ["light_cyan"]="\e[106m"
-    ["white"]="\e[107m"
+    ["default"]="49"
+    ["black"]="40"
+    ["red"]="41"
+    ["green"]="42"
+    ["yellow"]="43"
+    ["blue"]="44"
+    ["magenta"]="45"
+    ["cyan"]="46"
+    ["light_gray"]="47"
+    ["dark_gray"]="100"
+    ["light_red"]="101"
+    ["light_green"]="102"
+    ["light_yellow"]="103"
+    ["light_blue"]="104"
+    ["light_magenta"]="105"
+    ["light_cyan"]="106"
+    ["white"]="107"
 )
 declare -A CLEAR_MAP=(
-    ["all"]="\e[0m"
-    ["text"]="\e[20m"
-    ["foreground"]="\e[39m"
-    ["background"]="\e[49m"
+    ["all"]="0"
+    ["text"]="20"
+    ["foreground"]="39"
+    ["background"]="49"
 )
 
 
-function ofmt::set_clear() { echo -ne "${CLEAR_MAP[$1]}"; }
-function ofmt::set_markup() { echo -ne "${MARKUP_MAP[$1]}"; }
-function ofmt::set_foreground() { echo -ne "${FOREGROUND_MAP[$1]}"; }
-function ofmt::set_background() { echo -ne "${BACKGROUND_MAP[$1]}"; }
+function ofmt::set_escape() { echo -ne "\e[$1m"; }
+function ofmt::set_clear() { ofmt::set_escape "${CLEAR_MAP[$1]}"; }
+function ofmt::set_markup() { ofmt::set_escape "${MARKUP_MAP[$1]}"; }
+function ofmt::set_foreground() { ofmt::set_escape "${FOREGROUND_MAP[$1]}"; }
+function ofmt::set_background() { ofmt::set_escape "${BACKGROUND_MAP[$1]}"; }
 function ofmt::set_console_title() { echo -ne '\033]2;'$1'\007'; }
 
 
