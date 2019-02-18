@@ -161,7 +161,6 @@ function qtrpi::build() {
             build::clean_module "qtbase"
             build::build_qtbase
             device::sync_sysroot
-            echo "$PWD"
         ;;
     esac
 }
@@ -207,7 +206,7 @@ function qtrpi::device() {
 
 
 function qtrpi::check_variables() {
-    local var_path="$PWD"/scripts/common/variables.sh
+    local var_path="$PWD/scripts/common/variables.sh"
     if [[ ! -f "$var_path" ]]; then reset::config; fi
 
 }

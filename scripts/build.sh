@@ -91,7 +91,7 @@ EOL
     sed -i "s/\$\$QMAKE_CFLAGS -std=c++1z/\$\$QMAKE_CFLAGS -std=c++11/g" "$qmake_file"
 
     local opts_array=()
-    local opts_path="$cwd/scripts/common/opts_qtbase.txt"
+    local opts_path="$cwd/scripts/common/options.txt"
     while IFS='' read -r line || [[ -n "$line" ]]; do
         opts_array+=( "$line" )
     done < "$opts_path"

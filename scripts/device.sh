@@ -3,7 +3,7 @@
 
 function device::set_ssh_auth() {
     yes "" | ssh-keygen -t rsa
-    ssh-copy-id -i ~/.ssh/id_rsa.pub "$TARGET_HOST"
+    ssh-copy-id -i "~/.ssh/id_rsa.pub" "$TARGET_HOST"
 }
 
 

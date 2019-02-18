@@ -2,7 +2,7 @@
 
 
 function config::set_variable_line() {
-    sed -i "$1s|.*|$2|" "$PWD"/scripts/common/variables.sh
+    sed -i "$1s|.*|$2|" "$PWD/scripts/common/variables.sh"
 }
 
 
