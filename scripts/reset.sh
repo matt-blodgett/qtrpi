@@ -12,6 +12,8 @@ function reset::device() {
 
 
 function reset::config() {
+    local reset_only="$1"
+
     local vars=$(cat <<EOF
 #!/usr/bin/env bash
 LOCAL_PATH="/opt/qtrpi"
@@ -39,20 +41,25 @@ EOF
     local path_vars="$PWD/scripts/common/variables.sh"
     local path_opts="$PWD/scripts/common/options.txt"
 
-    echo "$vars" > "$temp_file"
-    head -c -1 "$temp_file" > "$path_vars"
-    rm "$temp_file"
+    if [[ ! "$reset_only" || "$reset_only" == "vars" ]]; then
+        echo "$vars" > "$temp_file"
+        head -c -1 "$temp_file" > "$path_vars"
+        rm "$temp_file"
 
-    echo "$opts" > "$temp_file"
-    head -c -1 "$temp_file" > "$path_opts"
-    rm "$temp_file"
+        source "$path_vars"
+    fi
 
-    source "$path_vars"
+    if [[ ! "$reset_only" || "$reset_only" == "opts" ]]; then
+        echo "$opts" > "$temp_file"
+        head -c -1 "$temp_file" > "$path_opts"
+        rm "$temp_file"
+    fi
 }
 
 
 function reset::all() {
-    reset::build
-    reset::device
-    reset::config
+    echo "reset all" >&3
+#    reset::build
+#    reset::device
+#    reset::config
 }

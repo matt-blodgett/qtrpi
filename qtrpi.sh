@@ -14,10 +14,10 @@ source scripts/device.sh
 
 
 OPT_COMMAND=
-OPT_QUIET=false
+OPT_LOGFILE=
+OPT_OUTPUT=all
 OPT_VERBOSE=false
-OPT_LOGFILE=""
-OPT_OUTPUT="all"
+OPT_NOCONFIRM=false
 
 
 declare -n FLAG_MAP
@@ -27,6 +27,7 @@ declare -A COMMON_FLAGS=(
     ["verbose"]="v"
     ["output:"]=""
     ["logfile:"]=""
+    ["noconfirm"]=""
 )
 declare -A COMMAND_BUILD_FLAGS=(
     ["install"]=""
@@ -64,7 +65,8 @@ Optional Flags:
  -h| --help              display this help text
  -v| --verbose           output verbose messages
    | --output            set the output level [all,quiet,silent]
-   | --logfile
+   | --logfile           a file to record suppressed output [quiet]
+   | --noconfirm         suppress and confirm any confirmation messages
 
 Command Flags:
 build                    Build Scripts
@@ -95,9 +97,7 @@ device                   Device Utils
 Git: <https://github.com/matt-blodgett/qtrpi.git>
 EOF
 
-    if [[ ! "$1" ]]
-    then exit 1
-    else exit $1; fi
+    if [[ ! "$1" ]]; then exit 1; else exit $1; fi
 }
 
 
@@ -179,18 +179,35 @@ function qtrpi::config() {
 
 
 function qtrpi::reset() {
+    local confirm_msg=""
+
     if [[ "$1" =~ ^(-a|--all)$ ]]; then
-        reset::all
+        confirm_msg="Are you sure you want to reset all qtrpi files "
+        confirm_msg+="including configuration files and all related "
+        confirm_msg+="local and remote build files? "
+
+        if [[ $(msgs::confirm "$confirm_msg") ]]; then reset::all; fi
         exit 0
     fi
 
+    local reset_build=false
+    local reset_config=false
+    local reset_device=false
+
     for arg in $@; do
         case "$arg" in
-            -b|--build  ) reset::build ;;
-            -c|--config ) reset::config ;;
-            -d|--device ) reset::device ;;
+            -b|--build  ) reset_build=true ;;
+            -c|--config ) reset_config=true ;;
+            -d|--device ) reset_device=true ;;
         esac
     done
+
+    confirm_msg="Are you sure you want to reset?"
+    if [[ $(msgs::confirm "$confirm_msg") ]]; then
+        if [[ "$reset_build" == true ]]; then reset::build; fi
+        if [[ "$reset_device" == true ]]; then reset::device; fi
+        if [[ "$reset_config" == true ]]; then reset::config; fi
+    fi
 }
 
 
@@ -205,15 +222,17 @@ function qtrpi::device() {
 }
 
 
-function qtrpi::check_variables() {
-    local var_path="$PWD/scripts/common/variables.sh"
-    if [[ ! -f "$var_path" ]]; then reset::config; fi
+function qtrpi::check_config() {
+    local path_vars="$PWD/scripts/common/variables.sh"
+    if [[ ! -f "$path_vars" ]]; then reset::config "vars"; fi
 
+    local path_opts="$PWD/scripts/common/options.txt"
+    if [[ ! -f "$path_opts" ]]; then reset::config "opts"; fi
 }
 
 
 function main() {
-    qtrpi::check_variables
+    qtrpi::check_config
 
     local -a args_array=( $@ )
     local -a args_parsed=$(args::parse_short_flags args_array)
@@ -222,17 +241,16 @@ function main() {
 
     qtrpi::validate_common_args args_array
     while [[ $i -lt ${#args_array[@]} ]]; do
-        local arg="${args_array[$i]}"
+        local arg="${args_array[((i++))]}"
 
         case "$arg" in
             -h|--help    ) qtrpi::usage 0 ;;
             -v|--verbose ) OPT_VERBOSE=true ;;
-            --output     ) OPT_OUTPUT="${args_array[((++i))]}" ;;
-            --logfile    ) OPT_LOGFILE="${args_array[((++i))]}" ;;
+            --output     ) OPT_OUTPUT="${args_array[((i++))]}" ;;
+            --logfile    ) OPT_LOGFILE="${args_array[((i++))]}" ;;
+            --noconfirm  ) OPT_NOCONFIRM=true ;;
             *            ) args_parsed+=( "$arg" ) ;;
         esac
-
-        ((i++))
     done
 
     args_array=( ${args_parsed[@]} )
@@ -240,7 +258,7 @@ function main() {
 
     local -a output_types=( "all" "quiet" "silent" )
     args::check_valid_choice "$OPT_OUTPUT" output_types "output"
-    msgs::initialize "$OPT_OUTPUT" "$OPT_LOGFILE"
+    msgs::initialize
 
     local -a command_types=( "build" "config" "reset" "device" )
     args::check_valid_choice "$OPT_COMMAND" command_types "command"
@@ -298,3 +316,6 @@ function main() {
 
 
 main "$@"
+
+
+

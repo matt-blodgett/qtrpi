@@ -8,8 +8,8 @@ source "$SCRIPT_DIR"/msgs.sh
 
 function args::usage_error() {
     local error_message="$1"
-    msgs::error_message "$error_message"
-    msgs::status_message "use 'qtrpi.sh --help' for usage"
+    msgs::error "$error_message"
+    msgs::status "use 'qtrpi.sh --help' for usage"
     exit 1
 }
 
@@ -17,7 +17,7 @@ function args::usage_error() {
 function args::check_exit_code() {
     local exit_code="$1"
     if [[ "$exit_code" != 0 ]]; then
-        msgs::error_message "the process finished with exit code $exit_code"
+        msgs::error "the process finished with exit code $exit_code"
         exit $1
     fi
 }
