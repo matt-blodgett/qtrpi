@@ -1,11 +1,8 @@
 #!/usr/bin/env bash
 
 
-SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
-
-
 function config::set_variable_line() {
-    sed -i "$1s|.*|$2|" "$SCRIPT_DIR"/common/variables.sh
+    sed -i "$1s|.*|$2|" "$PWD"/scripts/common/variables.sh
 }
 
 

@@ -1,10 +1,6 @@
 #!/usr/bin/env bash
 
 
-SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
-source "$SCRIPT_DIR"/common/variables.sh
-
-
 function device::set_ssh_auth() {
     yes "" | ssh-keygen -t rsa
     ssh-copy-id -i ~/.ssh/id_rsa.pub "$TARGET_HOST"
@@ -18,7 +14,7 @@ function device::sync_sysroot() {
     rsync -avz "$TARGET_HOST:/opt/vc" "$LOCAL_PATH/raspi/sysroot/opt"
     rsync -avz "$LOCAL_PATH/raspi/qt5pi" "$TARGET_HOST:/usr/local"
 
-    "$SCRIPT_DIR"/sysroot-relativelinks.py "$LOCAL_PATH/raspi/sysroot"
+    "$PWD"/scripts/sysroot-relativelinks.py "$LOCAL_PATH/raspi/sysroot"
 }
 
 

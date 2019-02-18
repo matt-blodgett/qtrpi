@@ -1,11 +1,6 @@
 #!/usr/bin/env bash
 
 
-SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
-source "$SCRIPT_DIR"/common/variables.sh
-source "$SCRIPT_DIR"/device.sh
-
-
 function build::init_local() {
     sudo mkdir -v "$LOCAL_PATH"
     sudo chown -v "$(whoami)":"$(whoami)" "$LOCAL_PATH" --recursive
@@ -23,16 +18,22 @@ function build::init_local() {
 
 
 function build::init_device() {
-    device::send_script "$SCRIPT_DIR/deploy/init-deps.sh"
     local pi_usr=$(cut -d"@" -f1 <<<"$TARGET_HOST")
-    device::send_command "sudo mkdir -v $TARGET_PATH && sudo chown -v $pi_usr:$pi_usr $TARGET_PATH --recursive"
+    local pi_command="sudo mkdir -v $TARGET_PATH && sudo chown -v $pi_usr:$pi_usr $TARGET_PATH"
+    local pi_script="$PWD/scripts/deploy/init-deps.sh"
+
+    device::send_script "$pi_script"
+    device::send_command "$pi_command"
 }
 
 
 function build::install_device() {
-    device::send_script "$SCRIPT_DIR/deploy/fix-mesa-libs.sh"
     local conf_path="/etc/ld.so.conf.d/00-qt5pi.conf"
-    device::send_command "echo $TARGET_PATH/lib | sudo tee $conf_path && sudo ldconfig -v"
+    local pi_command="echo $TARGET_PATH/lib | sudo tee $conf_path && sudo ldconfig -v"
+    local pi_script="$PWD/scripts/deploy/fix-mesa-libs.sh"
+
+    device::send_script "$pi_script"
+    device::send_command "$pi_command"
 }
 
 
@@ -63,19 +64,23 @@ function build::clean_module() {
 function build::build_qtbase() {
     local cwd="$PWD"
     local qt_module="qtbase"
+    local qt_module_path="$LOCAL_PATH/modules/$qt_module"
 
     local extprefix="$LOCAL_PATH/raspi/qt5pi"
     local hostprefix="$LOCAL_PATH/raspi/qt5"
     local sysroot="$LOCAL_PATH/raspi/sysroot"
-    local cross_compile="$LOCAL_PATH/raspi/tools/arm-bcm2708/gcc-linaro-arm-linux-gnueabihf-raspbian-x64/bin/arm-linux-gnueabihf-"
 
-    git clone -v "git://code.qt.io/qt/$qt_module.git" "$LOCAL_PATH/modules/$qt_module" -b "$QT_BRANCH"
-    cd "$LOCAL_PATH/modules/$qt_module"
+    local cross_compile="$LOCAL_PATH"
+    cross_compile+="/raspi/tools/arm-bcm2708"
+    cross_compile+="/gcc-arm-linux-gnueabihf-raspbian-x64"
+    cross_compile+="/bin/arm-linux-gnueabihf-"
+
+    git clone -v "git://code.qt.io/qt/$qt_module.git" "$qt_module_path" -b "$QT_BRANCH"
+    cd "$qt_module_path"
     git checkout "tags/$QT_TAG"
 
-    local qmake_file="mkspecs/devices/$TARGET_DEVICE/qmake.conf"
-
     # Add missing INCLUDEPATH in qmake conf
+    local qmake_file="mkspecs/devices/$TARGET_DEVICE/qmake.conf"
     grep -q "INCLUDEPATH" "$qmake_file" || cat>>"$qmake_file" << EOL
     INCLUDEPATH += \$\$[QT_SYSROOT]/opt/vc/include
     INCLUDEPATH += \$\$[QT_SYSROOT]/opt/vc/include/interface/vcos
@@ -86,7 +91,7 @@ EOL
     sed -i "s/\$\$QMAKE_CFLAGS -std=c++1z/\$\$QMAKE_CFLAGS -std=c++11/g" "$qmake_file"
 
     local opts_array=()
-    local opts_path="$SCRIPT_DIR/common/opts_qtbase.txt"
+    local opts_path="$cwd/scripts/common/opts_qtbase.txt"
     while IFS='' read -r line || [[ -n "$line" ]]; do
         opts_array+=( "$line" )
     done < "$opts_path"
@@ -109,11 +114,12 @@ EOL
 
 
 function build::build_qtmodule() {
-    local qt_module="$1"
     local cwd="$PWD"
+    local qt_module="$1"
+    local qt_module_path="$LOCAL_PATH/modules/$qt_module"
 
-    git clone -v "git://code.qt.io/qt/$qt_module.git" "$LOCAL_PATH/modules/$qt_module" -b "$QT_BRANCH"
-    cd "$LOCAL_PATH/modules/$qt_module"
+    git clone -v "git://code.qt.io/qt/$qt_module.git" "$qt_module_path" -b "$QT_BRANCH"
+    cd "$qt_module_path"
     git checkout "tags/$QT_TAG"
 
     build::qmake "$qt_module"

@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
 
+source scripts/common/variables.sh
 source scripts/utils/args.sh
 source scripts/utils/array.sh
 source scripts/utils/ofmt.sh
@@ -17,6 +18,7 @@ OPT_QUIET=false
 OPT_VERBOSE=false
 OPT_LOGFILE=""
 OPT_OUTPUT="all"
+
 
 declare -n FLAG_MAP
 
@@ -296,7 +298,4 @@ function main() {
 }
 
 
-#main "$@"
-
-build::test
-
+main "$@"
