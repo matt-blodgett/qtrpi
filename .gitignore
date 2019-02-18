@@ -6,4 +6,4 @@ venv*
 .idea*
 
 # configuration files
-*variables.sh
+scripts/common/**

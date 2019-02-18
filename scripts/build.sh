@@ -50,18 +50,24 @@ function build::make() {
 
 
 function build::clean_module() {
-    cd "$LOCAL_PATH/modules/$1"
+    local qt_module="$1"
+    local cwd="$PWD"
+
+    cd "$LOCAL_PATH/modules/$qt_module"
     git clean -dfx
+
+    cd "$cwd"
 }
 
 
 function build::build_qtbase() {
-    export CROSS_COMPILE="$LOCAL_PATH/raspi/tools/arm-bcm2708/gcc-linaro-arm-linux-gnueabihf-raspbian-x64/bin/arm-linux-gnueabihf-"
-    export SYSROOT="$LOCAL_PATH/raspi/sysroot"
-
+    local cwd="$PWD"
     local qt_module="qtbase"
-    local output_dir="$LOCAL_PATH/raspi/qt5pi"
-    local output_host_dir="$LOCAL_PATH/raspi/qt5"
+
+    local extprefix="$LOCAL_PATH/raspi/qt5pi"
+    local hostprefix="$LOCAL_PATH/raspi/qt5"
+    local sysroot="$LOCAL_PATH/raspi/sysroot"
+    local cross_compile="$LOCAL_PATH/raspi/tools/arm-bcm2708/gcc-linaro-arm-linux-gnueabihf-raspbian-x64/bin/arm-linux-gnueabihf-"
 
     git clone -v "git://code.qt.io/qt/$qt_module.git" "$LOCAL_PATH/modules/$qt_module" -b "$QT_BRANCH"
     cd "$LOCAL_PATH/modules/$qt_module"
@@ -79,29 +85,32 @@ EOL
 
     sed -i "s/\$\$QMAKE_CFLAGS -std=c++1z/\$\$QMAKE_CFLAGS -std=c++11/g" "$qmake_file"
 
-    ./configure \
-        -verbose \
-        -release \
-        -opengl es2 \
-        -make libs \
-        -opensource \
-        -confirm-license \
-        -no-use-gold-linker \
-        -fontconfig \
-        -device-option CROSS_COMPILE="$CROSS_COMPILE" \
-        -device "$TARGET_DEVICE" \
-        -sysroot "$SYSROOT" \
-        -prefix "$TARGET_PATH" \
-        -extprefix "$output_dir" \
-        -hostprefix "$output_host_dir" \
-        |& tee "$LOCAL_PATH/logs/$qt_module.log"
+    local opts_array=()
+    local opts_path="$SCRIPT_DIR/common/opts_qtbase.txt"
+    while IFS='' read -r line || [[ -n "$line" ]]; do
+        opts_array+=( "$line" )
+    done < "$opts_path"
+
+    opts_array+=( "-sysroot $sysroot" )
+    opts_array+=( "-extprefix $extprefix" )
+    opts_array+=( "-hostprefix $hostprefix" )
+    opts_array+=( "-prefix $TARGET_PATH" )
+    opts_array+=( "-device $TARGET_DEVICE" )
+    opts_array+=( "-device-option CROSS_COMPILE=$cross_compile" )
+
+    IFS=' ' read -a opts <<<"${opts_array[@]}"
+    opts_array=( "${opts[@]}" )
+
+     ./configure "${opts_array[@]}" |& tee "$LOCAL_PATH/logs/$qt_module.log"
 
     build::make "$qt_module"
+    cd "$cwd"
 }
 
 
 function build::build_qtmodule() {
     local qt_module="$1"
+    local cwd="$PWD"
 
     git clone -v "git://code.qt.io/qt/$qt_module.git" "$LOCAL_PATH/modules/$qt_module" -b "$QT_BRANCH"
     cd "$LOCAL_PATH/modules/$qt_module"
@@ -109,4 +118,6 @@ function build::build_qtmodule() {
 
     build::qmake "$qt_module"
     build::make "$qt_module"
+
+    cd "$cwd"
 }

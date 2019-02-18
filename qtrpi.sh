@@ -145,15 +145,12 @@ function qtrpi::validate_command_args() {
 
 
 function qtrpi::build() {
-    local cwd="$PWD"
-
     case "$1" in
         --install )
             build::init_local
             build::init_device
             device::sync_sysroot
             build::build_qtbase
-            cd "$cwd"
             build::install_device
             device::sync_sysroot
         ;;
@@ -161,8 +158,8 @@ function qtrpi::build() {
             device::sync_sysroot
             build::clean_module "qtbase"
             build::build_qtbase
-            cd "$cwd"
             device::sync_sysroot
+            echo "$PWD"
         ;;
     esac
 }
@@ -210,6 +207,7 @@ function qtrpi::device() {
 function qtrpi::check_variables() {
     local var_path="$PWD"/scripts/common/variables.sh
     if [[ ! -f "$var_path" ]]; then reset::config; fi
+
 }
 
 
@@ -298,4 +296,7 @@ function main() {
 }
 
 
-main "$@"
+#main "$@"
+
+build::test
+
