@@ -61,8 +61,9 @@ The build process has a few distinct steps:
 
 If building QtBase fails try the following steps:
 1. Install any missing dependencies on the device
-2. Tweak the `./configure` variables used
-3. Retry the build with `./qtrpi.sh build --rebuild`
+2. Make sure `rpi-update` has been run on the device
+3. Tweak the `./configure` variables used
+4. Retry the build with `./qtrpi.sh build --rebuild`
 
 ## Configuring QtCreator:
 ##### Source Reference: [wiki.qt.io/RasperryPi2EGLFS](https://wiki.qt.io/RaspberryPi2EGLFS)
