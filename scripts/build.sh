@@ -2,25 +2,30 @@
 
 
 function build::init_local() {
-    sudo mkdir -v "$LOCAL_PATH"
-    sudo chown -v "$(whoami)":"$(whoami)" "$LOCAL_PATH" --recursive
+    sudo mkdir "$LOCAL_PATH" $OPT_VERBOSE
+    sudo chown "$(whoami)":"$(whoami)" "$LOCAL_PATH" --recursive $OPT_VERBOSE
 
-    mkdir -v "$LOCAL_PATH/logs"
-    mkdir -v "$LOCAL_PATH/modules"
+    local local_dirs=()
+    local_dirs+=( "$LOCAL_PATH/logs" )
+    local_dirs+=( "$LOCAL_PATH/modules" )
+    local_dirs+=( "$LOCAL_PATH/raspi" )
+    local_dirs+=( "$LOCAL_PATH/raspi/sysroot" )
+    local_dirs+=( "$LOCAL_PATH/raspi/sysroot/usr" )
+    local_dirs+=( "$LOCAL_PATH/raspi/sysroot/opt" )
 
-    mkdir -v "$LOCAL_PATH/raspi"
-    mkdir -v "$LOCAL_PATH/raspi/sysroot"
-    mkdir -v "$LOCAL_PATH/raspi/sysroot/usr"
-    mkdir -v "$LOCAL_PATH/raspi/sysroot/opt"
+    mkdir "${local_dirs[@]}" $OPT_VERBOSE
 
-    git clone -v "https://github.com/raspberrypi/tools.git" "$LOCAL_PATH/raspi/tools"
+    git clone "https://github.com/raspberrypi/tools.git" "$LOCAL_PATH/raspi/tools" $OPT_VERBOSE
 }
 
 
 function build::init_device() {
-    local pi_usr=$(cut -d"@" -f1 <<<"$TARGET_HOST")
-    local pi_command="sudo mkdir -v $TARGET_PATH && sudo chown -v $pi_usr:$pi_usr $TARGET_PATH"
     local pi_script="$PWD/scripts/deploy/init-deps.sh"
+    local pi_usr=$(cut -d"@" -f1 <<<"$TARGET_HOST")
+
+    local pi_command=""
+    pi_command+="sudo mkdir $TARGET_PATH $OPT_VERBOSE "
+    pi_command+="&& sudo chown $pi_usr:$pi_usr $TARGET_PATH $OPT_VERBOSE"
 
     device::send_script "$pi_script"
     device::send_command "$pi_command"
@@ -28,9 +33,12 @@ function build::init_device() {
 
 
 function build::install_device() {
-    local conf_path="/etc/ld.so.conf.d/00-qt5pi.conf"
-    local pi_command="echo $TARGET_PATH/lib | sudo tee $conf_path && sudo ldconfig -v"
     local pi_script="$PWD/scripts/deploy/fix-mesa-libs.sh"
+    local conf_path="/etc/ld.so.conf.d/00-qt5pi.conf"
+
+    local pi_command=""
+    pi_command+="echo $TARGET_PATH/lib | sudo tee $conf_path "
+    pi_command+="&& sudo ldconfig $OPT_VERBOSE"
 
     device::send_script "$pi_script"
     device::send_command "$pi_command"
@@ -55,7 +63,7 @@ function build::clean_module() {
     local cwd="$PWD"
 
     cd "$LOCAL_PATH/modules/$qt_module"
-    git clean -dfx
+    git clean -dfx $OPT_VERBOSE
 
     cd "$cwd"
 }
@@ -75,7 +83,7 @@ function build::build_qtbase() {
     cross_compile+="/gcc-arm-linux-gnueabihf-raspbian-x64"
     cross_compile+="/bin/arm-linux-gnueabihf-"
 
-    git clone -v "git://code.qt.io/qt/$qt_module.git" "$qt_module_path" -b "$QT_BRANCH"
+    git clone "git://code.qt.io/qt/$qt_module.git" "$qt_module_path" -b "$QT_BRANCH" $OPT_VERBOSE
     cd "$qt_module_path"
     git checkout "tags/$QT_TAG"
 
@@ -118,7 +126,7 @@ function build::build_qtmodule() {
     local qt_module="$1"
     local qt_module_path="$LOCAL_PATH/modules/$qt_module"
 
-    git clone -v "git://code.qt.io/qt/$qt_module.git" "$qt_module_path" -b "$QT_BRANCH"
+    git clone "git://code.qt.io/qt/$qt_module.git" "$qt_module_path" -b "$QT_BRANCH" $OPT_VERBOSE
     cd "$qt_module_path"
     git checkout "tags/$QT_TAG"
 

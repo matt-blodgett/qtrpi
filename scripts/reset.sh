@@ -2,12 +2,12 @@
 
 
 function reset::build() {
-    sudo rm -rfv "$LOCAL_PATH"
+    sudo rm -rf "$LOCAL_PATH" $OPT_VERBOSE
 }
 
 
 function reset::device() {
-    device::send_command "sudo rm -rfv $TARGET_PATH"
+    device::send_command "sudo rm -rf $TARGET_PATH $OPT_VERBOSE "
 }
 
 
@@ -58,8 +58,7 @@ EOF
 
 
 function reset::all() {
-    echo "reset all" >&3
-#    reset::build
-#    reset::device
-#    reset::config
+    reset::build
+    reset::device
+    reset::config
 }

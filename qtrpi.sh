@@ -14,9 +14,9 @@ source scripts/device.sh
 
 
 OPT_COMMAND=
+OPT_VERBOSE=
 OPT_LOGFILE=
 OPT_OUTPUT=all
-OPT_VERBOSE=false
 OPT_NOCONFIRM=false
 
 
@@ -245,7 +245,7 @@ function main() {
 
         case "$arg" in
             -h|--help    ) qtrpi::usage 0 ;;
-            -v|--verbose ) OPT_VERBOSE=true ;;
+            -v|--verbose ) OPT_VERBOSE="-v" ;;
             --output     ) OPT_OUTPUT="${args_array[((i++))]}" ;;
             --logfile    ) OPT_LOGFILE="${args_array[((i++))]}" ;;
             --noconfirm  ) OPT_NOCONFIRM=true ;;
@@ -316,6 +316,3 @@ function main() {
 
 
 main "$@"
-
-
-
