@@ -15,10 +15,10 @@ function array::contains() {
 
 function array::index_of() {
     local value="$1"
-    local -n array=$2
+    local -n arr=$2
 
     local i=0
-    for val in ${array[@]}; do
+    for val in ${arr[@]}; do
         if [[ "$val" == "$value" ]]; then
             echo "$i"
             break
