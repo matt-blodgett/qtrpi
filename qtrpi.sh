@@ -1,16 +1,18 @@
 #!/usr/bin/env bash
 
 
-source scripts/common/variables.sh
-source scripts/utils/args.sh
-source scripts/utils/array.sh
-source scripts/utils/ofmt.sh
-source scripts/utils/msgs.sh
+function qtrpi::source() {
+    source scripts/common/variables.sh
+    source scripts/utils/args.sh
+    source scripts/utils/array.sh
+    source scripts/utils/ofmt.sh
+    source scripts/utils/msgs.sh
 
-source scripts/build.sh
-source scripts/config.sh
-source scripts/reset.sh
-source scripts/device.sh
+    source scripts/build.sh
+    source scripts/config.sh
+    source scripts/reset.sh
+    source scripts/device.sh
+}
 
 
 OPT_COMMAND=
@@ -266,15 +268,44 @@ function qtrpi::device() {
 
 function qtrpi::check_config() {
     local path_vars="$PWD/scripts/common/variables.sh"
-    if [[ ! -f "$path_vars" ]]; then reset::config "vars"; fi
+    local default_vars=false
 
     local path_opts="$PWD/scripts/common/options.txt"
-    if [[ ! -f "$path_opts" ]]; then reset::config "opts"; fi
+    local default_opts=false
+
+    if [[ ! -d "$PWD/scripts/common" ]]; then
+        mkdir "$PWD/scripts/common"
+    fi
+
+    if [[ ! -f "$path_vars" ]]; then
+        default_vars=true
+        touch "$path_vars"
+    fi
+
+    if [[ ! -f "$path_opts" ]]; then
+        default_opts=true
+        touch "$path_opts"
+    fi
+
+    if [[ "$default_vars" == true || "$default_opts" == true ]]; then
+        OPT_OUTPUT=all
+        qtrpi::source
+        msgs::initialize
+    fi
+
+    if [[ "$default_vars" == true ]]; then
+        reset::config "vars"
+    fi
+
+    if [[ "$default_opts" == true ]]; then
+        reset::config "opts"
+    fi
 }
 
 
 function main() {
     qtrpi::check_config
+    qtrpi::source
 
     local -a args_array=( $@ )
     local -a args_parsed=$(args::parse_short_flags args_array)
