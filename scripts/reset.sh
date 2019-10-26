@@ -54,7 +54,9 @@ EOF
 
     if [[ ! "$reset_only" || "$reset_only" == "vars" ]]; then
         echo "$vars" > "$temp_file"
+        head -c -1 "$temp_file" > "$path_vars"
         source "$path_vars"
+        rm "$temp_file"
     fi
 
     if [[ ! "$reset_only" || "$reset_only" == "opts" ]]; then
